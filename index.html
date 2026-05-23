@@ -52,7 +52,295 @@ th{background:#34495e;color:#fff;font-weight:400}
 .btn-orange:hover{background:#d35400}
 .btn-gray{background:#95a5a6}
 .btn-gray:hover{background:#7f8c8d}
+/* ===== スマホ見やすさ改善 ===== */
+html {
+  -webkit-text-size-adjust: 100%;
+}
 
+table {
+  min-width: 720px;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  .container {
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  h1 {
+    font-size: 24px;
+    margin-top: 0;
+    margin-bottom: 16px;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .actions button {
+    margin: 0;
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 14px;
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .summary {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .card p {
+    font-size: 22px;
+  }
+
+  form {
+    padding: 14px;
+  }
+
+  form > div:first-child,
+  form > div:last-child {
+    grid-template-columns: 1fr !important;
+  }
+
+  #search,
+  #fMonth,
+  #fType,
+  #date,
+  #type,
+  #category,
+  #amount,
+  #shop,
+  #memo {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  form button[type="submit"] {
+    min-height: 46px;
+    width: 100%;
+  }
+
+  #chartsArea {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .budget-box {
+    padding: 14px;
+  }
+
+  .budget-label {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 18px;
+    max-height: 88vh;
+  }
+
+  .modal-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  div[style*="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap"] {
+    flex-direction: column;
+  }
+
+  div[style*="display:grid;grid-template-columns:80px 1fr 1fr 1fr;gap:8px;margin-bottom:8px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  div[style*="display:grid;grid-template-columns:1fr 2fr auto;gap:8px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  div[style*="display:grid;grid-template-columns:1fr 2fr auto;gap:10px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  table {
+    font-size: 13px;
+  }
+
+  th, td {
+    padding: 10px 8px;
+    white-space: nowrap;
+  }
+
+  .del {
+    min-height: 36px;
+    padding: 8px 10px;
+  }
+}
+
+/* テーブル横スクロール */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+/* スマホ用カード一覧 */
+.card-list {
+  display: none;
+}
+
+.entry-card {
+  background: #fff;
+  border: 1px solid #e6eaf0;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+
+.entry-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.entry-card-date {
+  font-size: 13px;
+  color: #666;
+}
+
+.entry-card-amount {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.entry-card-body {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #333;
+}
+
+.entry-card-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.entry-card-label {
+  min-width: 52px;
+  color: #777;
+  font-size: 12px;
+}
+
+.entry-card-value {
+  flex: 1;
+  word-break: break-word;
+}
+
+.entry-card-actions {
+  margin-top: 10px;
+  text-align: right;
+}
+
+/* 下部固定追加ボタン */
+.fab-add {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1100;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(52,152,219,.35);
+}
+
+.fab-add:hover {
+  background: linear-gradient(135deg, #2980b9, #2471a3);
+}
+
+@media (max-width: 768px) {
+  #tableWrap {
+    display: none;
+  }
+
+  .card-list {
+    display: block;
+  }
+
+  .fab-add {
+    display: block;
+  }
+
+  body {
+    padding-bottom: 90px;
+  }
+}
+/* グラフのはみ出し防止 */
+#chartsArea > div {
+  min-width: 0;
+  overflow: hidden;
+}
+
+#chartsArea canvas {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+@media (max-width: 768px) {
+  #chartsArea {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  #chartsArea > div {
+    width: 100%;
+    padding: 14px !important;
+  }
+
+  #monChart,
+  #catChart {
+    max-width: 100% !important;
+  }
+}
+#chartsArea > div {
+  position: relative;
+  height: 320px;
+}
+
+@media (max-width: 768px) {
+  #chartsArea > div {
+    height: 260px;
+  }
+}
 </style>
 </head>
 <body>
@@ -130,13 +418,16 @@ th{background:#34495e;color:#fff;font-weight:400}
 <option value="expense">支出のみ</option>
 </select>
 </div>
+<div class="table-wrap" id="tableWrap">
 <table>
 <thead><tr><th>日付</th><th>種類</th><th>カテゴリ</th><th>店舗</th><th>メモ</th><th>金額</th><th>操作</th></tr></thead>
 <tbody id="tbody"></tbody>
 </table>
-<div id="emptyMsg" class="empty" style="display:none">記録がありません。</div>
 </div>
 
+<div id="cardList" class="card-list"></div>
+
+<div id="emptyMsg" class="empty" style="display:none">記録がありません。</div>
 <script>
 let entries = JSON.parse(localStorage.getItem('kakeibo') || '[]');
 let budgets = JSON.parse(localStorage.getItem('kakeibo_budgets') || '{}');
@@ -569,6 +860,8 @@ function renderCharts() {
       }]
     },
     options: {
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: { position: 'bottom', labels: { font: { size: 11 } } },
         tooltip: { callbacks: { label: c => c.label + ': ¥' + yen(c.parsed) } }
@@ -597,6 +890,8 @@ function renderCharts() {
       ]
     },
     options: {
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         tooltip: { callbacks: { label: c => c.dataset.label + ': ¥' + yen(c.parsed.y) } }
       },
@@ -629,7 +924,41 @@ function updateMonthFilter() {
   });
   if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
 }
+function renderCards(list) {
+  const cardList = document.getElementById('cardList');
+  cardList.innerHTML = '';
 
+  list.forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'entry-card';
+
+    div.innerHTML =
+      '<div class="entry-card-top">' +
+        '<div>' +
+          '<div class="entry-card-date">' + e.date + '</div>' +
+          '<div class="t-' + e.type + '">' + (e.type === 'income' ? '収入' : '支出') + ' / ' + e.category + '</div>' +
+        '</div>' +
+        '<div class="entry-card-amount">¥' + yen(e.amount) + '</div>' +
+      '</div>' +
+
+      '<div class="entry-card-body">' +
+        '<div class="entry-card-row">' +
+          '<div class="entry-card-label">店舗</div>' +
+          '<div class="entry-card-value">' + (e.shop || '-') + '</div>' +
+        '</div>' +
+        '<div class="entry-card-row">' +
+          '<div class="entry-card-label">メモ</div>' +
+          '<div class="entry-card-value">' + (e.memo || '-') + '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="entry-card-actions">' +
+        '<button class="del" onclick="deleteEntry(' + e.id + ')">削除</button>' +
+      '</div>';
+
+    cardList.appendChild(div);
+  });
+}
 function render() {
   const m = document.getElementById('fMonth').value;
   const t = document.getElementById('fType').value;
@@ -658,6 +987,7 @@ function render() {
       '<td><button class="del" onclick="deleteEntry(' + e.id + ')">削除</button></td>';
     tbody.appendChild(tr);
   });
+  renderCards(sorted);
   document.getElementById('emptyMsg').style.display = sorted.length === 0 ? 'block' : 'none';
   
   const inc = filtered.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0);
@@ -724,6 +1054,10 @@ document.getElementById('entryForm').addEventListener('submit', function(e) {
 updateMonthFilter();
 render();
 checkRecurring();
+function scrollToEntryForm() {
+  const form = document.getElementById('entryForm');
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 </script>
 
 <div class="modal" id="budgetModal">
@@ -791,5 +1125,6 @@ checkRecurring();
 </div>
 </div>
 </div>
+<button id="fabAdd" class="fab-add" onclick="scrollToEntryForm()">＋ 追加</button>
 </body>
 </html>
