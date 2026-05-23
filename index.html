@@ -176,9 +176,9 @@ tbody tr:hover{background:var(--card2);}
 .savings-pct{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.3rem;font-weight:700;color:var(--green);}
 
 /* Wallet pills */
-.wallet-summary{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
-.wallet-pill{background:var(--card2);border-radius:10px;padding:10px 18px;text-align:center;min-width:100px;}
-.wallet-pill .wname{font-size:.7rem;color:var(--text-sub);}
+.wallet-summary{display:flex;flex-direction:column;gap:8px;}
+.wallet-pill{display:flex;justify-content:space-between;align-items:center;background:var(--card2);border-radius:10px;padding:10px 16px;}
+.wallet-pill .wname{font-size:.85rem;color:var(--text-sub);}
 .wallet-pill .wamt{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1rem;font-weight:700;color:var(--blue);}
 
 /* Fixed/Variable */
@@ -196,18 +196,23 @@ tbody tr:hover{background:var(--card2);}
 /* Yearly budget items */
 .ybi-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.8rem;}
 
-/* Quick templates */
-.quick-tpl-wrap{display:flex;flex-wrap:wrap;gap:8px;}
-.quick-tpl-chip{display:flex;flex-direction:column;align-items:flex-start;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:all .15s;font-family:'Noto Sans JP',sans-serif;color:var(--text);min-width:100px;}
-.quick-tpl-chip:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 2px 8px rgba(44,36,32,.08);}
-.quick-tpl-chip:active{transform:translateY(0) scale(.97);}
-.qtc-label{font-size:.82rem;font-weight:600;margin-bottom:2px;}
+/* Section labels */
+.section-label{font-size:.7rem;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.08em;padding:4px 0 8px;margin-top:4px;}
+
+/* Quick input button */
+.quick-input-btn{width:100%;padding:13px;border:none;background:var(--accent);color:#fff;border-radius:var(--radius);font-family:'Noto Sans JP',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:16px;}
+.quick-input-btn:hover{filter:brightness(.92);}
+
+/* Quick template picker modal */
+.qtpl-grid{display:flex;flex-wrap:wrap;gap:10px;padding:4px 0;}
+.qtpl-chip{display:flex;flex-direction:column;align-items:flex-start;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;cursor:pointer;transition:all .15s;font-family:'Noto Sans JP',sans-serif;color:var(--text);min-width:110px;flex:1;}
+.qtpl-chip:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 2px 10px rgba(44,36,32,.1);}
+.qtpl-chip:active{transform:scale(.97);}
+.qtc-label{font-size:.85rem;font-weight:600;margin-bottom:2px;}
 .qtc-meta{font-size:.65rem;color:var(--text-sub);}
-.qtc-amt{font-family:'M PLUS Rounded 1c',sans-serif;font-size:.95rem;font-weight:700;margin-top:2px;}
+.qtc-amt{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1rem;font-weight:700;margin-top:4px;}
 .qtc-amt.expense-text{color:var(--red);}
 .qtc-amt.income-text{color:var(--green);}
-.btn-manage{background:none;border:1px dashed var(--border);color:var(--text-sub);border-radius:10px;padding:10px 14px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.78rem;min-width:80px;transition:all .15s;}
-.btn-manage:hover{border-color:var(--accent);color:var(--accent);}
 
 @media(max-width:600px){
   .summary{gap:8px;}.summary-card{padding:12px 8px;}.summary-card .amount{font-size:.95rem;}
@@ -263,17 +268,8 @@ tbody tr:hover{background:var(--card2);}
     <div class="summary-card balance"><h3>残高</h3><div class="amount" id="totalBalance">¥0</div></div>
   </div>
 
-  <!-- Wallet summary -->
-  <div class="card">
-    <div class="card-title">💳 口座別残高（今月）</div>
-    <div class="wallet-summary" id="walletSummary"></div>
-  </div>
-
-  <!-- Quick Templates -->
-  <div class="card">
-    <div class="card-title">⚡ クイック入力（タップで今日の記録に追加）</div>
-    <div class="quick-tpl-wrap" id="quickTplWrap"></div>
-  </div>
+  <!-- Quick input button -->
+  <button class="quick-input-btn" onclick="openQuickModal()">⚡ クイック入力</button>
 
   <!-- Entry Form -->
   <div class="card">
@@ -296,64 +292,70 @@ tbody tr:hover{background:var(--card2);}
     </div>
   </div>
 
-  <!-- Stats -->
+  <!-- ── 日別 ── -->
+  <div class="section-label">📅 日別</div>
+
   <div class="card">
-    <div class="card-title">📊 今月のサマリー</div>
+    <div class="card-title">📊 今日のサマリー</div>
     <div class="stats-row" id="statsRow"></div>
   </div>
 
-  <!-- Fixed vs Variable -->
+  <div class="card">
+    <div class="card-title">🗓️ 日別支出ヒートマップ</div>
+    <div id="heatmap"></div>
+  </div>
+
+  <!-- ── 月別 ── -->
+  <div class="section-label">📆 月別</div>
+
+  <div class="card">
+    <div class="card-title">💳 口座別残高（今月）</div>
+    <div class="wallet-summary" id="walletSummary"></div>
+  </div>
+
   <div class="card">
     <div class="card-title">🔒 固定費 vs 変動費</div>
     <div class="fv-row" id="fvRow"></div>
   </div>
 
-  <!-- Budget Progress -->
   <div class="card">
     <div class="card-title">🎯 月次予算達成状況</div>
     <div id="budgetProgress"></div>
   </div>
 
-  <!-- Yearly Budget -->
+  <div class="card">
+    <div class="card-title">📊 カテゴリ別支出</div>
+    <div class="pie-wrap" id="pieChart"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 前月比較</div>
+    <div id="compareChart"></div>
+  </div>
+
+  <!-- ── 年別 ── -->
+  <div class="section-label">📅 年別</div>
+
   <div class="card">
     <div class="card-title">🗓️ 年間予算達成状況</div>
     <div id="yearlyBudgetProgress"></div>
     <div id="yearlyItemsProgress" style="margin-top:12px;"></div>
   </div>
 
-  <!-- Savings Goal -->
-  <div class="card" id="savingsCard" style="display:none;">
-    <div class="card-title">🐷 貯金目標</div>
-    <div class="savings-wrap" id="savingsWrap"></div>
-  </div>
-
-  <!-- Month comparison -->
-  <div class="card">
-    <div class="card-title">📊 前月比較</div>
-    <div id="compareChart"></div>
-  </div>
-
-  <!-- Category Pie -->
-  <div class="card">
-    <div class="card-title">📊 カテゴリ別支出</div>
-    <div class="pie-wrap" id="pieChart"></div>
-  </div>
-
-  <!-- Calendar Heatmap -->
-  <div class="card">
-    <div class="card-title">🗓️ 日別支出ヒートマップ</div>
-    <div id="heatmap"></div>
-  </div>
-
-  <!-- Monthly Trend -->
   <div class="card">
     <div class="card-title">📈 月別推移</div>
     <div id="trendChart"></div>
   </div>
 
-  <!-- History -->
+  <div class="card" id="savingsCard" style="display:none;">
+    <div class="card-title">🐷 貯金目標</div>
+    <div class="savings-wrap" id="savingsWrap"></div>
+  </div>
+
+  <!-- ── 履歴 ── -->
+  <div class="section-label">📋 履歴</div>
+
   <div class="card">
-    <div class="card-title">📋 履歴</div>
     <div class="filters">
       <select id="filterMonth" onchange="render()"></select>
       <select id="filterType" onchange="render()">
@@ -470,6 +472,17 @@ tbody tr:hover{background:var(--card2);}
   </div>
   <div id="ybiList"></div>
   <div class="modal-actions"><button class="btn-cancel" onclick="closeYbiModal()">閉じる</button></div>
+</div></div>
+
+<!-- Quick Template Picker -->
+<div class="modal-overlay" id="quickModal"><div class="modal">
+  <h2>⚡ クイック入力</h2>
+  <p style="font-size:.8rem;color:var(--text-sub);margin-bottom:14px;">タップで今日の記録に追加されます</p>
+  <div class="qtpl-grid" id="qtplGrid"></div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="document.getElementById('quickModal').classList.remove('open')">閉じる</button>
+    <button class="btn-save" style="background:var(--blue)" onclick="dc(openTemplateModal)">テンプレ管理</button>
+  </div>
 </div></div>
 
 <!-- Confirm Dialog -->
@@ -632,7 +645,7 @@ function render(){
   document.getElementById('totalIncome').textContent=formatYen(inc);
   document.getElementById('totalExpense').textContent=formatYen(exp);
   document.getElementById('totalBalance').textContent=formatYen(inc-exp);
-  renderWallets(me);renderQuickTemplates();renderStats(me,exp);renderFV(me,exp);
+  renderWallets(me);renderStats(me,exp);renderFV(me,exp);
   renderBudgetProgress(me);renderYearlyBudget();renderYearlyItems();
   renderSavings(inc,exp);renderCompare(me);renderPie(me);renderHeatmap();renderTrend();renderHistory();populateFilterMonths();
 }
@@ -645,19 +658,23 @@ function renderWallets(me){
   wrap.innerHTML=wallets.map(w=>`<div class="wallet-pill"><div class="wname">${w}</div><div class="wamt">${formatYen(data[w]||0)}</div></div>`).join('');
 }
 
-// ─── Quick Templates ─────────────────
-function renderQuickTemplates(){
-  const wrap=document.getElementById('quickTplWrap');
-  if(templates.length===0){
-    wrap.innerHTML=`<div class="empty-msg" style="padding:12px;width:100%;">テンプレートがありません。<button class="btn-manage" onclick="openTemplateModal()" style="margin-left:8px;">＋ 追加</button></div>`;
-    return;
-  }
-  const chips=templates.map(t=>`<button class="quick-tpl-chip" onclick="useTemplate(${t.id})">
+// ─── Quick Template Picker ───────────
+function openQuickModal(){
+  renderQuickGrid();
+  document.getElementById('quickModal').classList.add('open');
+}
+function renderQuickGrid(){
+  const wrap=document.getElementById('qtplGrid');
+  if(templates.length===0){wrap.innerHTML='<div class="empty-msg" style="width:100%;">テンプレートがありません。<br>「テンプレ管理」から追加してください。</div>';return;}
+  wrap.innerHTML=templates.map(t=>`<button class="qtpl-chip" onclick="useTemplateQ(${t.id})">
     <span class="qtc-label">${t.label}</span>
-    <span class="qtc-meta">${t.category} / ${t.wallet||wallets[0]}</span>
+    <span class="qtc-meta">${t.category} · ${t.wallet||wallets[0]}</span>
     <span class="qtc-amt ${t.type==='income'?'income-text':'expense-text'}">${t.type==='income'?'+':'-'}${formatYen(t.amount)}</span>
   </button>`).join('');
-  wrap.innerHTML=chips+`<button class="btn-manage" onclick="openTemplateModal()">＋ 管理</button>`;
+}
+function useTemplateQ(id){
+  useTemplate(id);
+  document.getElementById('quickModal').classList.remove('open');
 }
 
 // ─── Stats ───────────────────────────
@@ -935,9 +952,9 @@ function addTemplate(){
   if(!label){toast('ラベルを入力してください');return;}if(!amount||amount<=0){toast('金額を入力してください');return;}
   templates.push({id:Date.now(),label,type:document.getElementById('tplType').value,category:document.getElementById('tplCategory').value,
     amount,wallet:document.getElementById('tplWallet').value,shop:document.getElementById('tplShop').value.trim()});
-  saveAll();renderTemplateList();renderQuickTemplates();toast('追加しました');document.getElementById('tplLabel').value='';document.getElementById('tplAmount').value='';document.getElementById('tplShop').value='';
+  saveAll();renderTemplateList();toast('追加しました');document.getElementById('tplLabel').value='';document.getElementById('tplAmount').value='';document.getElementById('tplShop').value='';
 }
-function deleteTemplate(id){templates=templates.filter(t=>t.id!==id);saveAll();renderTemplateList();renderQuickTemplates();toast('削除しました');}
+function deleteTemplate(id){templates=templates.filter(t=>t.id!==id);saveAll();renderTemplateList();toast('削除しました');}
 function useTemplate(id){
   const t=templates.find(x=>x.id===id);if(!t)return;
   entries.push({id:Date.now(),date:formatDate(new Date()),type:t.type,category:t.category,amount:t.amount,wallet:t.wallet||wallets[0],shop:t.shop||'',memo:t.label});
