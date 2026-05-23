@@ -45,9 +45,24 @@
 body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;transition:background .3s,color .3s;}
 .container{max-width:900px;margin:0 auto;padding:20px 16px 80px;overflow:hidden;}
 h1{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.6rem;font-weight:700;text-align:center;padding:24px 0 8px;color:var(--accent);}
-.toolbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 24px;}
-.toolbar button{font-family:'Noto Sans JP',sans-serif;font-size:.78rem;padding:8px 12px;border:1px solid var(--border);background:var(--card);border-radius:8px;cursor:pointer;color:var(--text);transition:all .2s;}
-.toolbar button:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);}
+/* Header bar */
+.header-bar{display:flex;align-items:center;padding:16px 0 8px;position:relative;}
+.hamburger{background:none;border:none;cursor:pointer;padding:8px;display:flex;flex-direction:column;gap:5px;z-index:60;}
+.hamburger span{display:block;width:22px;height:2.5px;background:var(--text);border-radius:2px;transition:all .3s;}
+.header-title{flex:1;text-align:center;font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.5rem;font-weight:700;color:var(--accent);}
+.header-spacer{width:38px;}
+/* Drawer */
+.drawer-overlay{position:fixed;inset:0;background:rgba(44,36,32,.4);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s;}
+.drawer-overlay.open{opacity:1;pointer-events:auto;}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:270px;background:var(--card);z-index:210;transform:translateX(-100%);transition:transform .3s ease;box-shadow:4px 0 24px rgba(44,36,32,.15);display:flex;flex-direction:column;overflow-y:auto;}
+.drawer.open{transform:translateX(0);}
+.drawer-header{padding:24px 20px 16px;border-bottom:1px solid var(--border);font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.1rem;font-weight:700;color:var(--accent);display:flex;align-items:center;justify-content:space-between;}
+.drawer-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-sub);padding:4px 8px;}
+.drawer-menu{padding:12px 0;flex:1;}
+.drawer-item{display:flex;align-items:center;gap:12px;padding:12px 20px;font-size:.88rem;color:var(--text);cursor:pointer;transition:background .15s;border:none;background:none;width:100%;text-align:left;font-family:'Noto Sans JP',sans-serif;}
+.drawer-item:hover{background:var(--card2);}
+.drawer-item .di-icon{font-size:1.1rem;width:24px;text-align:center;}
+.drawer-divider{height:1px;background:var(--border);margin:8px 20px;}
 .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
 .summary-card{background:var(--card);border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow);border-top:3px solid var(--border);}
 .summary-card.income{border-top-color:var(--green);}.summary-card.expense{border-top-color:var(--red);}.summary-card.balance{border-top-color:var(--blue);}
@@ -192,21 +207,36 @@ tbody tr:hover{background:var(--card2);}
 </head>
 <body>
 <div class="container">
-  <h1>💰 家計簿ツール</h1>
-  <div class="toolbar">
-    <button onclick="openBudgetModal()">🎯 予算設定</button>
-    <button onclick="openRecurringModal()">🔁 定期収支</button>
-    <button onclick="openTemplateModal()">⚡ テンプレ</button>
-    <button onclick="openSavingsModal()">🐷 貯金目標</button>
-    <button onclick="openYearlyItemsModal()">📅 年間予算項目</button>
-    <button onclick="toggleDarkMode()">🌙 表示切替</button>
-    <button onclick="exportCSV()">📤 CSV出力</button>
-    <button onclick="document.getElementById('csvInput').click()">📥 CSV読込</button>
-    <button onclick="backupData()">💾 バックアップ</button>
-    <button onclick="document.getElementById('restoreInput').click()">📂 復元</button>
-    <input type="file" id="csvInput" class="file-input" accept=".csv" onchange="importCSV(event)">
-    <input type="file" id="restoreInput" class="file-input" accept=".json" onchange="restoreData(event)">
+  <!-- Header -->
+  <div class="header-bar">
+    <button class="hamburger" onclick="toggleDrawer()"><span></span><span></span><span></span></button>
+    <div class="header-title">💰 家計簿ツール</div>
+    <div class="header-spacer"></div>
   </div>
+
+  <!-- Hidden file inputs -->
+  <input type="file" id="csvInput" class="file-input" accept=".csv" onchange="importCSV(event)">
+  <input type="file" id="restoreInput" class="file-input" accept=".json" onchange="restoreData(event)">
+
+  <!-- Drawer overlay -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <nav class="drawer" id="drawer">
+    <div class="drawer-header">メニュー <button class="drawer-close" onclick="closeDrawer()">✕</button></div>
+    <div class="drawer-menu">
+      <button class="drawer-item" onclick="dc(openBudgetModal)"><span class="di-icon">🎯</span>予算設定</button>
+      <button class="drawer-item" onclick="dc(openRecurringModal)"><span class="di-icon">🔁</span>定期収支</button>
+      <button class="drawer-item" onclick="dc(openTemplateModal)"><span class="di-icon">⚡</span>テンプレート</button>
+      <button class="drawer-item" onclick="dc(openSavingsModal)"><span class="di-icon">🐷</span>貯金目標</button>
+      <button class="drawer-item" onclick="dc(openYbiModal)"><span class="di-icon">📅</span>年間予算項目</button>
+      <div class="drawer-divider"></div>
+      <button class="drawer-item" onclick="dc(exportCSV)"><span class="di-icon">📤</span>CSV出力</button>
+      <button class="drawer-item" onclick="dc(()=>document.getElementById('csvInput').click())"><span class="di-icon">📥</span>CSV読込</button>
+      <button class="drawer-item" onclick="dc(backupData)"><span class="di-icon">💾</span>バックアップ</button>
+      <button class="drawer-item" onclick="dc(()=>document.getElementById('restoreInput').click())"><span class="di-icon">📂</span>復元</button>
+      <div class="drawer-divider"></div>
+      <button class="drawer-item" onclick="dc(toggleDarkMode)"><span class="di-icon">🌙</span>表示切替</button>
+    </div>
+  </nav>
 
   <div class="month-nav">
     <button onclick="changeMonth(-1)">◀</button>
@@ -438,7 +468,7 @@ tbody tr:hover{background:var(--card2);}
 const EXPENSE_CATS=['食費','交通費','日用品','娯楽','光熱費','家賃','医療','通信費','教育','保険','その他'];
 const INCOME_CATS=['給料','副業','投資','その他'];
 const ALL_CATS=[...EXPENSE_CATS,...INCOME_CATS];
-const DEFAULT_WALLETS=['現金','銀行','クレジットカード'];
+const DEFAULT_WALLETS=['現金','銀行'];
 const CAT_COLORS={'食費':'#e07050','交通費':'#4a9ec2','日用品':'#8ebe50','娯楽':'#c070c0','光熱費':'#e0a030','家賃':'#607090','医療':'#50beb0','通信費':'#7090c0','教育':'#b08040','保険':'#60a0a0','給料':'#5a9e6f','副業':'#7abf7a','投資':'#40a0d0','その他':'#a0a0a0'};
 
 // Data
@@ -496,6 +526,11 @@ function setType(type){
   populateCategories();
 }
 function changeMonth(d){viewMonth+=d;if(viewMonth>11){viewMonth=0;viewYear++;}if(viewMonth<0){viewMonth=11;viewYear--;}render();}
+
+// Drawer
+function toggleDrawer(){document.getElementById('drawer').classList.toggle('open');document.getElementById('drawerOverlay').classList.toggle('open');}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerOverlay').classList.remove('open');}
+function dc(fn){closeDrawer();setTimeout(fn,200);}
 
 // Dark mode
 function toggleDarkMode(){
