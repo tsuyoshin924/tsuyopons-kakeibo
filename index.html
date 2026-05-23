@@ -71,6 +71,12 @@ h1{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.6rem;font-weight:700;t
 .summary-card.income .amount{color:var(--green);}.summary-card.expense .amount{color:var(--red);}.summary-card.balance .amount{color:var(--blue);}
 .card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:var(--shadow);overflow:hidden;min-width:0;}
 .card-title{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1rem;font-weight:700;margin-bottom:16px;}
+.card-title.collapsible{cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:0;user-select:none;}
+.card-title.collapsible:hover{color:var(--accent);}
+.card-title.collapsible::after{content:'▼';font-size:.65rem;color:var(--text-sub);transition:transform .25s;margin-left:8px;flex-shrink:0;}
+.card-title.collapsible.collapsed::after{transform:rotate(-90deg);}
+.card-body{margin-top:16px;}
+.card-body.collapsed{display:none;}
 .form-row{display:flex;flex-wrap:wrap;gap:10px;align-items:end;}
 .form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:100px;}
 .form-group label{font-size:.7rem;color:var(--text-sub);font-weight:500;}
@@ -229,22 +235,9 @@ tbody tr:hover{background:var(--card2);}
 .quick-input-btn:hover{filter:brightness(.92);}
 .top-btns{display:flex;gap:10px;margin-bottom:16px;}
 .top-btns .quick-input-btn{margin-bottom:0;flex:1;}
-.btn-scan{flex:1;padding:13px;border:none;background:var(--blue);color:#fff;border-radius:var(--radius);font-family:'Noto Sans JP',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.btn-scan:hover{filter:brightness(.92);}
 
-/* Scan modal */
-.scan-drop{border:2px dashed var(--border);border-radius:var(--radius);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--card2);position:relative;}
-.scan-drop:hover,.scan-drop.drag{border-color:var(--blue);background:var(--blue-light);}
-.scan-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.scan-preview{max-width:100%;max-height:220px;border-radius:8px;margin:12px auto;display:block;}
-.scan-result{background:var(--card2);border-radius:10px;padding:16px;margin-top:14px;}
-.scan-result-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
-.scan-result-row label{font-size:.72rem;color:var(--text-sub);width:70px;flex-shrink:0;}
-.scan-result-row input,.scan-result-row select{flex:1;font-family:'Noto Sans JP',sans-serif;font-size:.85rem;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);outline:none;}
-.scan-items{font-size:.75rem;color:var(--text-sub);margin-top:6px;padding:8px;background:var(--card);border-radius:6px;line-height:1.8;}
-.scan-loading{text-align:center;padding:24px;color:var(--text-sub);}
-.scan-loading .spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px;}
-@keyframes spin{to{transform:rotate(360deg);}}
+/* Tax */
+.tax-hint{font-size:.72rem;color:var(--text-sub);margin-top:4px;min-height:1em;}
 
 /* Quick template picker modal */
 .qtpl-grid{display:flex;flex-wrap:wrap;gap:10px;padding:4px 0;}
@@ -316,14 +309,12 @@ tbody tr:hover{background:var(--card2);}
     <div class="summary-card balance"><h3>残高</h3><div class="amount" id="totalBalance">¥0</div></div>
   </div>
 
-  <div class="top-btns">
-    <button class="quick-input-btn" onclick="openQuickModal()">⚡ クイック入力</button>
-    <button class="btn-scan" onclick="openScanModal()">📷 レシートスキャン</button>
-  </div>
+  <button class="quick-input-btn" onclick="openQuickModal()">⚡ クイック入力</button>
 
   <!-- Entry Form -->
   <div class="card">
-    <div class="card-title">📝 記録を追加</div>
+    <div class="card-title collapsible" onclick="toggleCard('c-entry')">📝 記録を追加</div>
+    <div class="card-body" id="c-entry">
     <div class="form-row">
       <div class="form-group" style="min-width:130px;flex:0 0 auto;">
         <label>種類</label>
@@ -334,11 +325,19 @@ tbody tr:hover{background:var(--card2);}
       </div>
       <div class="form-group"><label>日付</label><input type="date" id="entryDate"></div>
       <div class="form-group"><label>カテゴリ</label><select id="entryCategory"></select></div>
-      <div class="form-group"><label>金額</label><input type="number" id="entryAmount" placeholder="0" min="0"></div>
+      <div class="form-group"><label>金額（税抜）</label><input type="number" id="entryAmount" placeholder="0" min="0" oninput="updateTaxHint()"><div class="tax-hint" id="taxHint"></div></div>
+      <div class="form-group"><label>消費税</label>
+        <select id="entryTax" onchange="updateTaxHint()">
+          <option value="0">なし</option>
+          <option value="8">8%（軽減税率）</option>
+          <option value="10">10%</option>
+        </select>
+      </div>
       <div class="form-group"><label>口座</label><select id="entryWallet"></select></div>
       <div class="form-group"><label>店舗</label><input type="text" id="entryShop" placeholder="任意"></div>
       <div class="form-group"><label>メモ</label><input type="text" id="entryMemo" placeholder="任意"></div>
       <div class="form-group" style="flex:0 0 auto;"><label>&nbsp;</label><button class="btn-add" onclick="addEntry()">追加</button></div>
+    </div>
     </div>
   </div>
 
@@ -346,66 +345,70 @@ tbody tr:hover{background:var(--card2);}
   <div class="section-label">📅 日別</div>
 
   <div class="card">
-    <div class="card-title">📊 今日のサマリー</div>
-    <div class="stats-row" id="statsRow"></div>
+    <div class="card-title collapsible" onclick="toggleCard('c-stats')">📊 今日のサマリー</div>
+    <div class="card-body" id="c-stats"><div class="stats-row" id="statsRow"></div></div>
   </div>
 
   <div class="card">
-    <div class="card-title">🗓️ 日別支出ヒートマップ</div>
-    <div id="heatmap"></div>
+    <div class="card-title collapsible" onclick="toggleCard('c-heatmap')">🗓️ 日別支出ヒートマップ</div>
+    <div class="card-body" id="c-heatmap"><div id="heatmap"></div></div>
   </div>
 
   <!-- ── 月別 ── -->
   <div class="section-label">📆 月別</div>
 
   <div class="card">
-    <div class="card-title">💳 口座別残高（今月）</div>
-    <div class="wallet-summary" id="walletSummary"></div>
+    <div class="card-title collapsible" onclick="toggleCard('c-wallet')">💳 口座別残高（今月）</div>
+    <div class="card-body" id="c-wallet"><div class="wallet-summary" id="walletSummary"></div></div>
   </div>
 
   <div class="card">
-    <div class="card-title">🔒 固定費 vs 変動費</div>
-    <div class="fv-row" id="fvRow"></div>
+    <div class="card-title collapsible" onclick="toggleCard('c-fv')">🔒 固定費 vs 変動費</div>
+    <div class="card-body" id="c-fv"><div class="fv-row" id="fvRow"></div></div>
   </div>
 
   <div class="card">
-    <div class="card-title">🎯 月次予算達成状況</div>
-    <div id="budgetProgress"></div>
+    <div class="card-title collapsible" onclick="toggleCard('c-budget')">🎯 月次予算達成状況</div>
+    <div class="card-body" id="c-budget"><div id="budgetProgress"></div></div>
   </div>
 
   <div class="card">
-    <div class="card-title">📊 カテゴリ別支出</div>
-    <div class="pie-wrap" id="pieChart"></div>
+    <div class="card-title collapsible" onclick="toggleCard('c-pie')">📊 カテゴリ別支出</div>
+    <div class="card-body" id="c-pie"><div class="pie-wrap" id="pieChart"></div></div>
   </div>
 
   <div class="card">
-    <div class="card-title">📊 前月比較</div>
-    <div id="compareChart"></div>
+    <div class="card-title collapsible" onclick="toggleCard('c-compare')">📊 前月比較</div>
+    <div class="card-body" id="c-compare"><div id="compareChart"></div></div>
   </div>
 
   <!-- ── 年別 ── -->
   <div class="section-label">📅 年別</div>
 
   <div class="card">
-    <div class="card-title">🗓️ 年間予算達成状況</div>
-    <div id="yearlyBudgetProgress"></div>
-    <div id="yearlyItemsProgress" style="margin-top:12px;"></div>
+    <div class="card-title collapsible" onclick="toggleCard('c-yearly')">🗓️ 年間予算達成状況</div>
+    <div class="card-body" id="c-yearly">
+      <div id="yearlyBudgetProgress"></div>
+      <div id="yearlyItemsProgress" style="margin-top:12px;"></div>
+    </div>
   </div>
 
   <div class="card">
-    <div class="card-title">📈 月別推移</div>
-    <div id="trendChart"></div>
+    <div class="card-title collapsible" onclick="toggleCard('c-trend')">📈 月別推移</div>
+    <div class="card-body" id="c-trend"><div id="trendChart"></div></div>
   </div>
 
   <div class="card" id="savingsCard" style="display:none;">
-    <div class="card-title">🐷 貯金目標</div>
-    <div class="savings-wrap" id="savingsWrap"></div>
+    <div class="card-title collapsible" onclick="toggleCard('c-savings')">🐷 貯金目標</div>
+    <div class="card-body" id="c-savings"><div class="savings-wrap" id="savingsWrap"></div></div>
   </div>
 
   <!-- ── 履歴 ── -->
   <div class="section-label">📋 履歴</div>
 
   <div class="card">
+    <div class="card-title collapsible" onclick="toggleCard('c-history')">📋 履歴</div>
+    <div class="card-body" id="c-history">
     <div class="filters">
       <select id="filterMonth" onchange="render()"></select>
       <select id="filterType" onchange="render()">
@@ -422,6 +425,7 @@ tbody tr:hover{background:var(--card2);}
         <tbody id="historyBody"></tbody>
       </table>
     </div>
+    </div><!-- end card-body c-history -->
   </div>
 </div>
 </div><!-- end view-main -->
@@ -641,47 +645,6 @@ tbody tr:hover{background:var(--card2);}
   <div class="modal-actions"><button class="btn-cancel" onclick="closeYbiModal()">閉じる</button></div>
 </div></div>
 
-<!-- Receipt Scan Modal -->
-<div class="modal-overlay" id="scanModal"><div class="modal" style="max-width:560px;">
-  <h2>📷 レシートスキャン</h2>
-  <div id="scan-body">
-    <div class="scan-drop" id="scanDrop">
-      <input type="file" id="scanFileInput" accept="image/*" capture="environment" onchange="onScanFile(event)">
-      <div style="font-size:2.5rem;margin-bottom:8px;">📷</div>
-      <div style="font-size:.9rem;font-weight:600;margin-bottom:4px;">タップして撮影 / 画像を選択</div>
-      <div style="font-size:.75rem;color:var(--text-sub);">レシートをAIが自動解析して入力します</div>
-    </div>
-    <img id="scanPreview" class="scan-preview" style="display:none;">
-  </div>
-  <div id="scan-loading" style="display:none;" class="scan-loading">
-    <div class="spinner"></div>
-    <div style="font-size:.85rem;">AIがレシートを解析中...</div>
-  </div>
-  <div id="scan-result" style="display:none;">
-    <div class="scan-result">
-      <div style="font-size:.8rem;font-weight:600;margin-bottom:12px;">📋 解析結果（修正して確定）</div>
-      <div class="scan-result-row"><label>日付</label><input type="date" id="sc-date"></div>
-      <div class="scan-result-row"><label>店舗名</label><input type="text" id="sc-shop"></div>
-      <div class="scan-result-row"><label>金額</label><input type="number" id="sc-amount" min="0"></div>
-      <div class="scan-result-row"><label>カテゴリ</label>
-        <select id="sc-category">
-          <option>食費</option><option>交通費</option><option>日用品</option><option>娯楽</option>
-          <option>光熱費</option><option>家賃</option><option>医療</option><option>通信費</option>
-          <option>教育</option><option>保険</option><option>その他</option>
-        </select>
-      </div>
-      <div class="scan-result-row"><label>口座</label><select id="sc-wallet"></select></div>
-      <div class="scan-result-row"><label>メモ</label><input type="text" id="sc-memo"></div>
-      <div id="sc-items" class="scan-items"></div>
-    </div>
-  </div>
-  <div id="scan-error" style="display:none;color:var(--red);font-size:.82rem;padding:12px;background:var(--red-light);border-radius:8px;margin-top:12px;"></div>
-  <div class="modal-actions">
-    <button class="btn-cancel" onclick="closeScanModal()">キャンセル</button>
-    <button class="btn-save" id="sc-confirm-btn" style="display:none;" onclick="confirmScan()">✅ この内容で追加</button>
-  </div>
-</div></div>
-
 <!-- Transfer Modal -->
 <div class="modal-overlay" id="transferModal"><div class="modal">
   <h2>💸 口座振替</h2>
@@ -773,7 +736,7 @@ function init(){
     ];
     templates=seed.map((t,i)=>({id:Date.now()+i,...t}));saveAll();
   }
-  populateCategories();populateWallets();populateFilterMonths();render();
+  populateCategories();populateWallets();populateFilterMonths();render();applyCollapsedState();
 }
 
 function populateCategories(){
@@ -813,15 +776,24 @@ function toggleDarkMode(){
 function addEntry(){
   const date=document.getElementById('entryDate').value;
   const category=document.getElementById('entryCategory').value;
-  const amount=parseInt(document.getElementById('entryAmount').value);
+  const base=parseInt(document.getElementById('entryAmount').value);
+  const taxRate=parseInt(document.getElementById('entryTax').value)||0;
   const wallet=document.getElementById('entryWallet').value;
   const shop=document.getElementById('entryShop').value.trim();
   const memo=document.getElementById('entryMemo').value.trim();
-  if(!date||!amount||amount<=0){toast('日付と金額を入力してください');return;}
-  entries.push({id:Date.now(),date,type:currentType,category,amount,wallet,shop,memo});
+  if(!date||!base||base<=0){toast('日付と金額を入力してください');return;}
+  const tax=Math.floor(base*taxRate/100);
+  const amount=base+tax;
+  entries.push({id:Date.now(),date,type:currentType,category,amount,taxRate,wallet,shop,memo});
   entries.sort((a,b)=>b.date.localeCompare(a.date));
-  saveAll();document.getElementById('entryAmount').value='';document.getElementById('entryShop').value='';document.getElementById('entryMemo').value='';
-  toast('追加しました');render();
+  saveAll();
+  document.getElementById('entryAmount').value='';
+  document.getElementById('entryShop').value='';
+  document.getElementById('entryMemo').value='';
+  document.getElementById('entryTax').value='0';
+  document.getElementById('taxHint').textContent='';
+  toast(taxRate>0?`税込 ${formatYen(amount)} を追加しました`:'追加しました');
+  render();
 }
 function deleteEntry(id){entries=entries.filter(e=>e.id!==id);saveAll();toast('削除しました');render();}
 function confirmDelete(id){pendingDeleteId=id;document.getElementById('confirmOverlay').classList.add('open');}
@@ -1308,111 +1280,40 @@ function restoreData(event){
 document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
 document.getElementById('confirmOverlay').addEventListener('click',e=>{if(e.target.id==='confirmOverlay')cancelDelete();});
 
-// ─── Receipt Scan ────────────────────
-let scanImageBase64=null;
-
-function openScanModal(){
-  scanImageBase64=null;
-  document.getElementById('scan-body').style.display='';
-  document.getElementById('scan-loading').style.display='none';
-  document.getElementById('scan-result').style.display='none';
-  document.getElementById('scan-error').style.display='none';
-  document.getElementById('sc-confirm-btn').style.display='none';
-  document.getElementById('scanPreview').style.display='none';
-  document.getElementById('scanFileInput').value='';
-  document.getElementById('sc-wallet').innerHTML=wallets.map(w=>`<option value="${w}">${w}</option>`).join('');
-  document.getElementById('scanModal').classList.add('open');
+// ─── Collapsible cards ───────────────
+let collapsedCards=load('kb_collapsed',{});
+function toggleCard(id){
+  const body=document.getElementById(id);
+  const title=body.previousElementSibling;
+  const isNowCollapsed=!body.classList.contains('collapsed');
+  body.classList.toggle('collapsed',isNowCollapsed);
+  title.classList.toggle('collapsed',isNowCollapsed);
+  collapsedCards[id]=isNowCollapsed;
+  localStorage.setItem('kb_collapsed',JSON.stringify(collapsedCards));
 }
-function closeScanModal(){document.getElementById('scanModal').classList.remove('open');}
-
-async function onScanFile(event){
-  const file=event.target.files[0];if(!file)return;
-  // Show preview
-  const reader=new FileReader();
-  reader.onload=async(e)=>{
-    const dataUrl=e.target.result;
-    scanImageBase64=dataUrl.split(',')[1];
-    const preview=document.getElementById('scanPreview');
-    preview.src=dataUrl;preview.style.display='block';
-    // Start analysis
-    document.getElementById('scan-body').style.display='none';
-    document.getElementById('scan-loading').style.display='';
-    document.getElementById('scan-result').style.display='none';
-    document.getElementById('scan-error').style.display='none';
-    document.getElementById('sc-confirm-btn').style.display='none';
-    await analyzeReceipt(scanImageBase64);
-  };
-  reader.readAsDataURL(file);
-}
-
-async function analyzeReceipt(base64){
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        messages:[{
-          role:'user',
-          content:[
-            {type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64}},
-            {type:'text',text:`このレシート画像から情報を抽出してください。必ず以下のJSON形式のみで返してください（説明文・マークダウン不要）:
-{"date":"YYYY-MM-DD","shop":"店舗名","amount":合計金額の数値,"category":"食費|交通費|日用品|娯楽|光熱費|家賃|医療|通信費|教育|保険|その他のいずれか","items":["商品1","商品2"],"memo":""}
-・dateが不明な場合は今日の日付(${formatDate(new Date())})
-・amountは税込み合計金額（数値のみ）
-・categoryは内容から最適なものを選択
-・itemsは主要な商品名を最大5件`}
-          ]
-        }]
-      })
-    });
-    const data=await res.json();
-    if(!res.ok)throw new Error(data.error?.message||'APIエラー');
-    const text=data.content.find(b=>b.type==='text')?.text||'';
-    const json=JSON.parse(text.replace(/```json|```/g,'').trim());
-    showScanResult(json);
-  }catch(err){
-    document.getElementById('scan-loading').style.display='none';
-    document.getElementById('scan-body').style.display='';
-    const errEl=document.getElementById('scan-error');
-    errEl.style.display='';
-    errEl.textContent='解析に失敗しました: '+err.message;
-  }
-}
-
-function showScanResult(json){
-  document.getElementById('scan-loading').style.display='none';
-  document.getElementById('scan-result').style.display='';
-  document.getElementById('sc-confirm-btn').style.display='';
-  document.getElementById('sc-date').value=json.date||formatDate(new Date());
-  document.getElementById('sc-shop').value=json.shop||'';
-  document.getElementById('sc-amount').value=json.amount||'';
-  document.getElementById('sc-memo').value=json.memo||'';
-  // Set category
-  const catSel=document.getElementById('sc-category');
-  for(let o of catSel.options){if(o.value===json.category){catSel.value=json.category;break;}}
-  // Show items
-  const items=json.items||[];
-  const itemsEl=document.getElementById('sc-items');
-  itemsEl.style.display=items.length>0?'':'none';
-  itemsEl.innerHTML=items.length>0?'🛒 '+items.join('・'):'';
-}
-
-function confirmScan(){
-  const amount=parseInt(document.getElementById('sc-amount').value);
-  const date=document.getElementById('sc-date').value;
-  if(!amount||amount<=0){toast('金額を確認してください');return;}
-  entries.push({
-    id:Date.now(),date,type:'expense',
-    category:document.getElementById('sc-category').value,
-    amount,
-    wallet:document.getElementById('sc-wallet').value,
-    shop:document.getElementById('sc-shop').value.trim(),
-    memo:document.getElementById('sc-memo').value.trim()
+function applyCollapsedState(){
+  Object.entries(collapsedCards).forEach(([id,collapsed])=>{
+    if(!collapsed)return;
+    const body=document.getElementById(id);
+    if(!body)return;
+    body.classList.add('collapsed');
+    const title=body.previousElementSibling;
+    if(title)title.classList.add('collapsed');
   });
-  entries.sort((a,b)=>b.date.localeCompare(a.date));
-  saveAll();closeScanModal();toast('レシートを記録しました');render();
+}
+
+// ─── Tax calculation ─────────────────
+function updateTaxHint(){
+  const base=parseInt(document.getElementById('entryAmount').value)||0;
+  const rate=parseInt(document.getElementById('entryTax').value);
+  const hint=document.getElementById('taxHint');
+  if(base>0&&rate>0){
+    const tax=Math.floor(base*rate/100);
+    const total=base+tax;
+    hint.textContent=`消費税 ${formatYen(tax)} → 税込 ${formatYen(total)}`;
+  }else{
+    hint.textContent='';
+  }
 }
 
 // ─── View switching ──────────────────
