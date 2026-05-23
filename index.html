@@ -246,6 +246,7 @@ tbody tr:hover{background:var(--card2);}
       <button class="drawer-item" onclick="dc(openTemplateModal)"><span class="di-icon">⚡</span>テンプレート</button>
       <button class="drawer-item" onclick="dc(openSavingsModal)"><span class="di-icon">🐷</span>貯金目標</button>
       <button class="drawer-item" onclick="dc(openYbiModal)"><span class="di-icon">📅</span>年間予算項目</button>
+      <button class="drawer-item" onclick="dc(openTransferModal)"><span class="di-icon">💸</span>口座振替</button>
       <div class="drawer-divider"></div>
       <button class="drawer-item" onclick="dc(exportCSV)"><span class="di-icon">📤</span>CSV出力</button>
       <button class="drawer-item" onclick="dc(()=>document.getElementById('csvInput').click())"><span class="di-icon">📥</span>CSV読込</button>
@@ -362,6 +363,7 @@ tbody tr:hover{background:var(--card2);}
         <option value="all">すべての種類</option>
         <option value="income">収入のみ</option>
         <option value="expense">支出のみ</option>
+        <option value="transfer">振替のみ</option>
       </select>
       <input type="text" id="filterSearch" placeholder="🔍 検索..." oninput="render()" style="min-width:120px;">
     </div>
@@ -472,6 +474,23 @@ tbody tr:hover{background:var(--card2);}
   </div>
   <div id="ybiList"></div>
   <div class="modal-actions"><button class="btn-cancel" onclick="closeYbiModal()">閉じる</button></div>
+</div></div>
+
+<!-- Transfer Modal -->
+<div class="modal-overlay" id="transferModal"><div class="modal">
+  <h2>💸 口座振替</h2>
+  <p style="font-size:.8rem;color:var(--text-sub);margin-bottom:16px;">口座間の移動を記録します（収支の集計には含まれません）</p>
+  <div class="form-row" style="flex-direction:column;gap:12px;">
+    <div class="form-group"><label>日付</label><input type="date" id="trDate"></div>
+    <div class="form-group"><label>振替元</label><select id="trFrom"></select></div>
+    <div class="form-group"><label>振替先</label><select id="trTo"></select></div>
+    <div class="form-group"><label>金額</label><input type="number" id="trAmount" placeholder="0" min="0"></div>
+    <div class="form-group"><label>メモ</label><input type="text" id="trMemo" placeholder="任意"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeTransferModal()">キャンセル</button>
+    <button class="btn-save" onclick="execTransfer()">振替実行</button>
+  </div>
 </div></div>
 
 <!-- Quick Template Picker -->
@@ -640,21 +659,31 @@ function render(){
   const ym=viewYear+'-'+String(viewMonth+1).padStart(2,'0');
   document.getElementById('currentMonth').textContent=`${viewYear}年${viewMonth+1}月`;
   const me=entries.filter(e=>e.date.startsWith(ym));
-  const inc=me.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
-  const exp=me.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+  const meNormal=me.filter(e=>!e.isTransfer);
+  const inc=meNormal.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
+  const exp=meNormal.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
   document.getElementById('totalIncome').textContent=formatYen(inc);
   document.getElementById('totalExpense').textContent=formatYen(exp);
   document.getElementById('totalBalance').textContent=formatYen(inc-exp);
-  renderWallets(me);renderStats(me,exp);renderFV(me,exp);
-  renderBudgetProgress(me);renderYearlyBudget();renderYearlyItems();
-  renderSavings(inc,exp);renderCompare(me);renderPie(me);renderHeatmap();renderTrend();renderHistory();populateFilterMonths();
+  renderWallets(me);renderStats(meNormal,exp);renderFV(meNormal,exp);
+  renderBudgetProgress(meNormal);renderYearlyBudget();renderYearlyItems();
+  renderSavings(inc,exp);renderCompare(meNormal);renderPie(meNormal);renderHeatmap();renderTrend();renderHistory();populateFilterMonths();
 }
 
 // ─── Wallets ─────────────────────────
 function renderWallets(me){
   const wrap=document.getElementById('walletSummary');
   const data={};wallets.forEach(w=>data[w]=0);
-  me.forEach(e=>{const w=e.wallet||wallets[0];if(!data[w])data[w]=0;data[w]+=(e.type==='income'?1:-1)*e.amount;});
+  me.forEach(e=>{
+    if(e.isTransfer){
+      // Transfer: subtract from "from" wallet, add to "to" wallet
+      if(e.transferFrom&&data[e.transferFrom]!==undefined)data[e.transferFrom]-=e.amount;
+      if(e.transferTo&&data[e.transferTo]!==undefined)data[e.transferTo]+=e.amount;
+    } else {
+      const w=e.wallet||wallets[0];if(data[w]===undefined)data[w]=0;
+      data[w]+=(e.type==='income'?1:-1)*e.amount;
+    }
+  });
   wrap.innerHTML=wallets.map(w=>`<div class="wallet-pill"><div class="wname">${w}</div><div class="wamt">${formatYen(data[w]||0)}</div></div>`).join('');
 }
 
@@ -879,15 +908,53 @@ function renderHistory(){
   const fs=document.getElementById('filterSearch').value.trim().toLowerCase();
   let f=entries;
   if(fm!=='all')f=f.filter(e=>e.date.startsWith(fm));
-  if(ft!=='all')f=f.filter(e=>e.type===ft);
-  if(fs)f=f.filter(e=>(e.shop||'').toLowerCase().includes(fs)||(e.memo||'').toLowerCase().includes(fs)||(e.category||'').toLowerCase().includes(fs));
+  if(ft==='income')f=f.filter(e=>e.type==='income'&&!e.isTransfer);
+  else if(ft==='expense')f=f.filter(e=>e.type==='expense'&&!e.isTransfer);
+  else if(ft==='transfer')f=f.filter(e=>e.isTransfer);
+  if(fs)f=f.filter(e=>(e.shop||'').toLowerCase().includes(fs)||(e.memo||'').toLowerCase().includes(fs)||(e.category||'').toLowerCase().includes(fs)||(e.transferFrom||'').toLowerCase().includes(fs)||(e.transferTo||'').toLowerCase().includes(fs));
   if(f.length===0){tbody.innerHTML='<tr><td colspan="8" class="empty-msg">記録がありません。</td></tr>';return;}
-  tbody.innerHTML=f.map(e=>`<tr>
-    <td>${e.date}</td><td>${e.type==='income'?'収入':'支出'}</td><td>${e.category}</td><td>${e.wallet||'-'}</td>
-    <td>${e.shop||'-'}</td><td>${e.memo||'-'}</td>
-    <td class="amount-cell ${e.type==='income'?'income-text':'expense-text'}">${e.type==='income'?'+':'-'}${formatYen(e.amount)}</td>
-    <td><div class="action-btns"><button class="btn-edit" onclick="openEditModal(${e.id})">編集</button><button class="btn-del" onclick="confirmDelete(${e.id})">削除</button></div></td>
-  </tr>`).join('');
+  tbody.innerHTML=f.map(e=>{
+    if(e.isTransfer){
+      return `<tr style="background:var(--blue-light)">
+        <td>${e.date}</td><td style="color:var(--blue);font-weight:600">💸 振替</td>
+        <td colspan="3">${e.transferFrom} → ${e.transferTo}</td>
+        <td>${e.memo||'-'}</td>
+        <td class="amount-cell" style="color:var(--blue);font-weight:600">${formatYen(e.amount)}</td>
+        <td><button class="btn-del" onclick="confirmDelete(${e.id})">削除</button></td>
+      </tr>`;
+    }
+    return `<tr>
+      <td>${e.date}</td><td>${e.type==='income'?'収入':'支出'}</td><td>${e.category}</td><td>${e.wallet||'-'}</td>
+      <td>${e.shop||'-'}</td><td>${e.memo||'-'}</td>
+      <td class="amount-cell ${e.type==='income'?'income-text':'expense-text'}">${e.type==='income'?'+':'-'}${formatYen(e.amount)}</td>
+      <td><div class="action-btns"><button class="btn-edit" onclick="openEditModal(${e.id})">編集</button><button class="btn-del" onclick="confirmDelete(${e.id})">削除</button></div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Transfer Modal ───────────────────
+function openTransferModal(){
+  document.getElementById('trDate').value=formatDate(new Date());
+  ['trFrom','trTo'].forEach(id=>{
+    document.getElementById(id).innerHTML=wallets.map(w=>`<option value="${w}">${w}</option>`).join('');
+  });
+  document.getElementById('trTo').selectedIndex=1;
+  document.getElementById('trAmount').value='';
+  document.getElementById('trMemo').value='';
+  document.getElementById('transferModal').classList.add('open');
+}
+function closeTransferModal(){document.getElementById('transferModal').classList.remove('open');}
+function execTransfer(){
+  const date=document.getElementById('trDate').value;
+  const from=document.getElementById('trFrom').value;
+  const to=document.getElementById('trTo').value;
+  const amount=parseInt(document.getElementById('trAmount').value);
+  const memo=document.getElementById('trMemo').value.trim();
+  if(!amount||amount<=0){toast('金額を入力してください');return;}
+  if(from===to){toast('振替元と振替先が同じです');return;}
+  entries.push({id:Date.now(),date,type:'transfer',isTransfer:true,transferFrom:from,transferTo:to,amount,memo,wallet:from,category:'振替',shop:''});
+  entries.sort((a,b)=>b.date.localeCompare(a.date));
+  saveAll();closeTransferModal();toast(`${from} → ${to} ${formatYen(amount)} を振替しました`);render();
 }
 
 // ─── Budget Modal ────────────────────
