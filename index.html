@@ -356,6 +356,20 @@ tbody tr:hover { background: #faf8f6; }
 .amount-cell.income-text { color: var(--green); font-weight: 600; }
 .amount-cell.expense-text { color: var(--red); font-weight: 600; }
 
+.btn-edit {
+  background: none;
+  border: 1px solid var(--blue-light);
+  color: var(--blue);
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: all 0.2s;
+  margin-right: 4px;
+}
+.btn-edit:hover { background: var(--blue-light); }
+
 .btn-del {
   background: none;
   border: 1px solid var(--red-light);
@@ -368,6 +382,8 @@ tbody tr:hover { background: #faf8f6; }
   transition: all 0.2s;
 }
 .btn-del:hover { background: var(--red-light); }
+
+.action-btns { display: flex; gap: 4px; }
 
 .empty-msg {
   text-align: center;
@@ -453,6 +469,50 @@ tbody tr:hover { background: #faf8f6; }
   background: #faf8f6;
   outline: none;
 }
+
+/* Confirm dialog */
+.confirm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(44,36,32,0.4);
+  z-index: 150;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.confirm-overlay.open { display: flex; }
+.confirm-box {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(44,36,32,0.15);
+  animation: modalIn 0.25s ease;
+}
+.confirm-box p {
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+.confirm-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.confirm-btns button {
+  font-family: 'Noto Sans JP', sans-serif;
+  padding: 8px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.confirm-btns .btn-confirm-cancel { background: #f0ebe5; color: var(--text-sub); }
+.confirm-btns .btn-confirm-ok { background: var(--red); color: #fff; }
+.confirm-btns .btn-confirm-ok:hover { background: #a04040; }
 
 /* Recurring list */
 .recurring-item {
@@ -749,7 +809,59 @@ tbody tr:hover { background: #faf8f6; }
   </div>
 </div>
 
+<!-- Confirm Dialog -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <p>この記録を削除しますか？</p>
+    <div class="confirm-btns">
+      <button class="btn-confirm-cancel" onclick="cancelDelete()">キャンセル</button>
+      <button class="btn-confirm-ok" onclick="executeDelete()">削除する</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h2>✏️ 記録を編集</h2>
+    <input type="hidden" id="editId">
+    <div class="form-row" style="flex-direction:column;gap:12px;">
+      <div class="form-group">
+        <label>種類</label>
+        <select id="editType" onchange="updateEditCategories()">
+          <option value="expense">支出</option>
+          <option value="income">収入</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>日付</label>
+        <input type="date" id="editDate">
+      </div>
+      <div class="form-group">
+        <label>カテゴリ</label>
+        <select id="editCategory"></select>
+      </div>
+      <div class="form-group">
+        <label>金額</label>
+        <input type="number" id="editAmount" min="0">
+      </div>
+      <div class="form-group">
+        <label>店舗</label>
+        <input type="text" id="editShop">
+      </div>
+      <div class="form-group">
+        <label>メモ</label>
+        <input type="text" id="editMemo">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">キャンセル</button>
+      <button class="btn-save" onclick="saveEdit()">保存</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ─── Data ──────────────────────────────
@@ -1027,8 +1139,67 @@ function renderHistory() {
     <td>${e.shop || '-'}</td>
     <td>${e.memo || '-'}</td>
     <td class="amount-cell ${e.type === 'income' ? 'income-text' : 'expense-text'}">${e.type === 'income' ? '+' : '-'}${formatYen(e.amount)}</td>
-    <td><button class="btn-del" onclick="deleteEntry(${e.id})">削除</button></td>
+    <td><div class="action-btns"><button class="btn-edit" onclick="openEditModal(${e.id})">編集</button><button class="btn-del" onclick="confirmDelete(${e.id})">削除</button></div></td>
   </tr>`).join('');
+}
+
+// ─── Edit Modal ──────────────────────
+function openEditModal(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('editId').value = id;
+  document.getElementById('editType').value = e.type;
+  document.getElementById('editDate').value = e.date;
+  updateEditCategories(e.category);
+  document.getElementById('editAmount').value = e.amount;
+  document.getElementById('editShop').value = e.shop || '';
+  document.getElementById('editMemo').value = e.memo || '';
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEditModal() { document.getElementById('editModal').classList.remove('open'); }
+
+function updateEditCategories(selected) {
+  const type = document.getElementById('editType').value;
+  const cats = type === 'expense' ? EXPENSE_CATS : INCOME_CATS;
+  const sel = document.getElementById('editCategory');
+  sel.innerHTML = cats.map(c => `<option value="${c}"${c === selected ? ' selected' : ''}>${c}</option>`).join('');
+}
+
+function saveEdit() {
+  const id = parseInt(document.getElementById('editId').value);
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  const amount = parseInt(document.getElementById('editAmount').value);
+  if (!amount || amount <= 0) { toast('金額を正しく入力してください'); return; }
+  e.type = document.getElementById('editType').value;
+  e.date = document.getElementById('editDate').value;
+  e.category = document.getElementById('editCategory').value;
+  e.amount = amount;
+  e.shop = document.getElementById('editShop').value.trim();
+  e.memo = document.getElementById('editMemo').value.trim();
+  entries.sort((a,b) => b.date.localeCompare(a.date));
+  save();
+  closeEditModal();
+  toast('更新しました');
+  render();
+}
+
+let pendingDeleteId = null;
+
+function confirmDelete(id) {
+  pendingDeleteId = id;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function cancelDelete() {
+  pendingDeleteId = null;
+  document.getElementById('confirmOverlay').classList.remove('open');
+}
+function executeDelete() {
+  if (pendingDeleteId !== null) {
+    deleteEntry(pendingDeleteId);
+    pendingDeleteId = null;
+  }
+  document.getElementById('confirmOverlay').classList.remove('open');
 }
 
 // ─── Budget Modal ────────────────────
@@ -1180,6 +1351,9 @@ function restoreData(event) {
 // Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+document.getElementById('confirmOverlay').addEventListener('click', e => {
+  if (e.target.id === 'confirmOverlay') cancelDelete();
 });
 
 init();
