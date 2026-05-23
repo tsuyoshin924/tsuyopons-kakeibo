@@ -9,6 +9,7 @@
 :root {
   --bg: #f5f0eb;
   --card: #ffffff;
+  --card2: #faf8f6;
   --text: #2c2420;
   --text-sub: #7a6e64;
   --accent: #d4704e;
@@ -23,616 +24,182 @@
   --shadow: 0 2px 12px rgba(44,36,32,0.06);
   --radius: 12px;
 }
+[data-theme="dark"] {
+  --bg: #1a1816;
+  --card: #262220;
+  --card2: #302c28;
+  --text: #e8e0d8;
+  --text-sub: #9a8e84;
+  --accent: #e08060;
+  --accent-light: #5a3828;
+  --green: #6ab87f;
+  --green-light: #2a3e2e;
+  --red: #d06060;
+  --red-light: #3e2828;
+  --blue: #6a9fd5;
+  --blue-light: #283848;
+  --border: #3e3832;
+  --shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;transition:background .3s,color .3s;}
+.container{max-width:900px;margin:0 auto;padding:20px 16px 80px;overflow:hidden;}
+h1{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.6rem;font-weight:700;text-align:center;padding:24px 0 8px;color:var(--accent);}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 24px;}
+.toolbar button{font-family:'Noto Sans JP',sans-serif;font-size:.78rem;padding:8px 12px;border:1px solid var(--border);background:var(--card);border-radius:8px;cursor:pointer;color:var(--text);transition:all .2s;}
+.toolbar button:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.summary-card{background:var(--card);border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow);border-top:3px solid var(--border);}
+.summary-card.income{border-top-color:var(--green);}.summary-card.expense{border-top-color:var(--red);}.summary-card.balance{border-top-color:var(--blue);}
+.summary-card h3{font-size:.72rem;font-weight:500;color:var(--text-sub);margin-bottom:4px;}
+.summary-card .amount{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.2rem;font-weight:700;}
+.summary-card.income .amount{color:var(--green);}.summary-card.expense .amount{color:var(--red);}.summary-card.balance .amount{color:var(--blue);}
+.card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:var(--shadow);overflow:hidden;min-width:0;}
+.card-title{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1rem;font-weight:700;margin-bottom:16px;}
+.form-row{display:flex;flex-wrap:wrap;gap:10px;align-items:end;}
+.form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:100px;}
+.form-group label{font-size:.7rem;color:var(--text-sub);font-weight:500;}
+.form-group input,.form-group select{font-family:'Noto Sans JP',sans-serif;font-size:.85rem;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card2);color:var(--text);outline:none;transition:border .2s;}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+.type-toggle{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.type-toggle button{flex:1;padding:8px 12px;border:none;background:var(--card2);font-family:'Noto Sans JP',sans-serif;font-size:.8rem;cursor:pointer;transition:all .2s;color:var(--text-sub);}
+.type-toggle button.active-expense{background:var(--red);color:#fff;}
+.type-toggle button.active-income{background:var(--green);color:#fff;}
+.btn-add{font-family:'Noto Sans JP',sans-serif;padding:8px 24px;border:none;background:var(--accent);color:#fff;border-radius:8px;font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-add:hover{filter:brightness(.9);transform:translateY(-1px);}
+.budget-item{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.budget-item .cat-name{font-size:.78rem;width:70px;flex-shrink:0;}
+.budget-bar-wrap{flex:1;height:20px;background:var(--card2);border-radius:10px;overflow:hidden;}
+.budget-bar{height:100%;border-radius:10px;transition:width .5s;min-width:2px;}
+.budget-bar.ok{background:linear-gradient(90deg,#7bc88f,#5a9e6f);}
+.budget-bar.warn{background:linear-gradient(90deg,#f0c040,#e0a020);}
+.budget-bar.over{background:linear-gradient(90deg,#e07070,#c0504d);}
+.budget-text{font-size:.68rem;color:var(--text-sub);width:120px;text-align:right;flex-shrink:0;}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;}
+table{width:100%;min-width:660px;border-collapse:collapse;font-size:.8rem;}
+thead th{background:var(--card2);padding:10px 8px;text-align:left;font-weight:600;font-size:.73rem;color:var(--text-sub);white-space:nowrap;border-bottom:2px solid var(--border);}
+tbody td{padding:10px 8px;border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody tr:hover{background:var(--card2);}
+.amount-cell.income-text{color:var(--green);font-weight:600;}
+.amount-cell.expense-text{color:var(--red);font-weight:600;}
+.btn-edit{background:none;border:1px solid var(--blue-light);color:var(--blue);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.7rem;font-family:'Noto Sans JP',sans-serif;transition:all .2s;}
+.btn-edit:hover{background:var(--blue-light);}
+.btn-del{background:none;border:1px solid var(--red-light);color:var(--red);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.7rem;font-family:'Noto Sans JP',sans-serif;transition:all .2s;}
+.btn-del:hover{background:var(--red-light);}
+.action-btns{display:flex;gap:4px;}
+.empty-msg{text-align:center;padding:24px;color:var(--text-sub);font-size:.85rem;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(44,36,32,.4);z-index:100;justify-content:center;align-items:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--card);border-radius:var(--radius);padding:24px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(44,36,32,.15);animation:modalIn .25s ease;}
+@keyframes modalIn{from{opacity:0;transform:translateY(20px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+.modal h2{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.1rem;margin-bottom:16px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+.btn-cancel,.btn-save{font-family:'Noto Sans JP',sans-serif;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.85rem;border:none;transition:all .2s;}
+.btn-cancel{background:var(--card2);color:var(--text-sub);}
+.btn-save{background:var(--accent);color:#fff;}
+.btn-save:hover{filter:brightness(.9);}
+.budget-input-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.budget-input-row label{font-size:.8rem;width:70px;}
+.budget-input-row input{flex:1;font-family:'Noto Sans JP',sans-serif;font-size:.85rem;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card2);color:var(--text);outline:none;}
+.recurring-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem;}
+.tab-bar{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px;}
+.tab-bar button{flex:1;padding:8px;border:none;background:var(--card2);font-family:'Noto Sans JP',sans-serif;font-size:.8rem;cursor:pointer;color:var(--text-sub);transition:all .2s;}
+.tab-bar button.active{background:var(--accent);color:#fff;}
+.month-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px;}
+.month-nav button{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:1rem;transition:all .2s;color:var(--text);}
+.month-nav button:hover{border-color:var(--accent);}
+.month-nav .current-month{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.1rem;font-weight:700;min-width:140px;text-align:center;}
+.pie-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.pie-svg{width:200px;height:200px;}
+.chart-legend{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;margin-top:12px;font-size:.73rem;}
+.chart-legend span{display:flex;align-items:center;gap:4px;}
+.legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:180px;padding:0 4px;margin-top:12px;}
+.bar-group{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;}
+.bar-val{font-size:.6rem;color:var(--text-sub);margin-bottom:2px;white-space:nowrap;}
+.bar{width:100%;max-width:40px;border-radius:4px 4px 0 0;transition:height .5s;}
+.bar.income-bar{background:var(--green);}.bar.expense-bar{background:var(--red);}
+.bar-label{font-size:.6rem;color:var(--text-sub);margin-top:4px;}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center;}
+.filters select,.filters input{font-family:'Noto Sans JP',sans-serif;font-size:.8rem;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card2);color:var(--text);outline:none;}
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(44,36,32,.4);z-index:150;justify-content:center;align-items:center;padding:20px;}
+.confirm-overlay.open{display:flex;}
+.confirm-box{background:var(--card);border-radius:var(--radius);padding:24px;max-width:340px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(44,36,32,.15);animation:modalIn .25s ease;}
+.confirm-box p{font-size:.9rem;margin-bottom:20px;}
+.confirm-btns{display:flex;gap:10px;justify-content:center;}
+.confirm-btns button{font-family:'Noto Sans JP',sans-serif;padding:8px 24px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;transition:all .2s;}
+.confirm-btns .btn-confirm-cancel{background:var(--card2);color:var(--text-sub);}
+.confirm-btns .btn-confirm-ok{background:var(--red);color:#fff;}
+.file-input{display:none;}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:var(--bg);padding:12px 24px;border-radius:10px;font-size:.85rem;z-index:200;opacity:0;transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-* { margin:0; padding:0; box-sizing:border-box; }
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px;}
+.stat-box{text-align:center;padding:12px;background:var(--card2);border-radius:8px;}
+.stat-box .stat-val{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.05rem;font-weight:700;color:var(--accent);}
+.stat-box .stat-label{font-size:.68rem;color:var(--text-sub);margin-top:2px;}
 
-body {
-  font-family: 'Noto Sans JP', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-  min-height: 100vh;
-}
+/* Heatmap */
+.heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px;}
+.hm-cell{aspect-ratio:1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.55rem;color:var(--text-sub);position:relative;}
+.hm-header{font-size:.65rem;font-weight:600;color:var(--text-sub);text-align:center;padding:2px;}
+.hm-empty{background:transparent;}
 
-.container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px 16px 80px;
-  overflow: hidden;
-}
+/* Comparison */
+.compare-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:.8rem;}
+.compare-cat{width:60px;flex-shrink:0;font-size:.75rem;}
+.compare-bars{flex:1;display:flex;flex-direction:column;gap:2px;}
+.compare-bar{height:12px;border-radius:6px;transition:width .5s;}
+.compare-label{font-size:.65rem;color:var(--text-sub);width:110px;text-align:right;flex-shrink:0;}
 
-h1 {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-size: 1.6rem;
-  font-weight: 700;
-  text-align: center;
-  padding: 24px 0 8px;
-  color: var(--accent);
-}
+/* Savings */
+.savings-wrap{text-align:center;}
+.savings-info{font-size:.8rem;color:var(--text-sub);margin-bottom:8px;}
+.savings-bar-wrap{height:24px;background:var(--card2);border-radius:12px;overflow:hidden;margin:10px 0;}
+.savings-bar{height:100%;border-radius:12px;background:linear-gradient(90deg,#5a9e6f,#7bc88f);transition:width .5s;}
+.savings-pct{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.3rem;font-weight:700;color:var(--green);}
 
-/* Toolbar */
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin: 16px 0 24px;
-}
-.toolbar button {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.8rem;
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  border-radius: 8px;
-  cursor: pointer;
-  color: var(--text);
-  transition: all 0.2s;
-}
-.toolbar button:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  transform: translateY(-1px);
-}
+/* Wallet pills */
+.wallet-summary{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+.wallet-pill{background:var(--card2);border-radius:10px;padding:10px 18px;text-align:center;min-width:100px;}
+.wallet-pill .wname{font-size:.7rem;color:var(--text-sub);}
+.wallet-pill .wamt{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1rem;font-weight:700;color:var(--blue);}
 
-/* Summary Cards */
-.summary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
-}
-.summary-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 16px;
-  text-align: center;
-  box-shadow: var(--shadow);
-  border-top: 3px solid var(--border);
-}
-.summary-card.income { border-top-color: var(--green); }
-.summary-card.expense { border-top-color: var(--red); }
-.summary-card.balance { border-top-color: var(--blue); }
-.summary-card h3 {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-sub);
-  margin-bottom: 6px;
-}
-.summary-card .amount {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-size: 1.3rem;
-  font-weight: 700;
-}
-.summary-card.income .amount { color: var(--green); }
-.summary-card.expense .amount { color: var(--red); }
-.summary-card.balance .amount { color: var(--blue); }
+/* Fixed/Variable */
+.fv-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+.fv-box{text-align:center;flex:1;min-width:120px;padding:12px;background:var(--card2);border-radius:10px;}
+.fv-box .fv-label{font-size:.75rem;color:var(--text-sub);}
+.fv-box .fv-amt{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.1rem;font-weight:700;margin:4px 0;}
+.fv-box .fv-pct{font-size:.7rem;color:var(--text-sub);}
 
-/* Entry Form */
-.card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  min-width: 0;
-}
-.card-title {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: var(--text);
-}
+/* Template */
+.tpl-item{display:flex;align-items:center;justify-content:space-between;padding:8px;border-bottom:1px solid var(--border);font-size:.8rem;}
+.tpl-item button{margin-left:6px;}
+.btn-use{background:var(--green);color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.7rem;font-family:'Noto Sans JP',sans-serif;}
 
-.form-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: end;
-}
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 100px;
-}
-.form-group label {
-  font-size: 0.7rem;
-  color: var(--text-sub);
-  font-weight: 500;
-}
-.form-group input,
-.form-group select {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.85rem;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #faf8f6;
-  color: var(--text);
-  outline: none;
-  transition: border 0.2s;
-}
-.form-group input:focus,
-.form-group select:focus {
-  border-color: var(--accent);
-}
+/* Yearly budget items */
+.ybi-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.8rem;}
 
-.type-toggle {
-  display: flex;
-  gap: 0;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.type-toggle button {
-  flex: 1;
-  padding: 8px 12px;
-  border: none;
-  background: #faf8f6;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: var(--text-sub);
-}
-.type-toggle button.active-expense {
-  background: var(--red);
-  color: #fff;
-}
-.type-toggle button.active-income {
-  background: var(--green);
-  color: #fff;
-}
-
-.btn-add {
-  font-family: 'Noto Sans JP', sans-serif;
-  padding: 8px 24px;
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-.btn-add:hover {
-  background: #c0613f;
-  transform: translateY(-1px);
-}
-
-/* Budget Progress */
-.budget-section { margin-bottom: 20px; }
-.budget-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-.budget-item .cat-name {
-  font-size: 0.8rem;
-  width: 60px;
-  flex-shrink: 0;
-}
-.budget-bar-wrap {
-  flex: 1;
-  height: 20px;
-  background: #f0ebe5;
-  border-radius: 10px;
-  overflow: hidden;
-  position: relative;
-}
-.budget-bar {
-  height: 100%;
-  border-radius: 10px;
-  transition: width 0.5s ease;
-  min-width: 2px;
-}
-.budget-bar.ok { background: linear-gradient(90deg, #7bc88f, #5a9e6f); }
-.budget-bar.warn { background: linear-gradient(90deg, #f0c040, #e0a020); }
-.budget-bar.over { background: linear-gradient(90deg, #e07070, #c0504d); }
-.budget-text {
-  font-size: 0.7rem;
-  color: var(--text-sub);
-  width: 120px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-/* Charts */
-.chart-container {
-  position: relative;
-  width: 100%;
-  max-width: 300px;
-  margin: 0 auto;
-}
-.chart-container canvas {
-  width: 100% !important;
-  height: auto !important;
-}
-.chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  justify-content: center;
-  margin-top: 12px;
-  font-size: 0.75rem;
-}
-.chart-legend span {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.bar-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  height: 180px;
-  padding: 0 4px;
-  margin-top: 12px;
-}
-.bar-group {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-  justify-content: flex-end;
-}
-.bar-val {
-  font-size: 0.6rem;
-  color: var(--text-sub);
-  margin-bottom: 2px;
-  white-space: nowrap;
-}
-.bar {
-  width: 100%;
-  max-width: 40px;
-  border-radius: 4px 4px 0 0;
-  transition: height 0.5s ease;
-}
-.bar.income-bar { background: var(--green); }
-.bar.expense-bar { background: var(--red); }
-.bar-label {
-  font-size: 0.6rem;
-  color: var(--text-sub);
-  margin-top: 4px;
-}
-
-/* Filters */
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-  align-items: center;
-}
-.filters select, .filters input {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.8rem;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #faf8f6;
-  color: var(--text);
-  outline: none;
-}
-
-/* Table */
-.table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  max-width: 100%;
-}
-table {
-  width: 100%;
-  min-width: 640px;
-  border-collapse: collapse;
-  font-size: 0.8rem;
-}
-thead th {
-  background: #f0ebe5;
-  padding: 10px 8px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.75rem;
-  color: var(--text-sub);
-  white-space: nowrap;
-  border-bottom: 2px solid var(--border);
-}
-tbody td {
-  padding: 10px 8px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-tbody tr:hover { background: #faf8f6; }
-.amount-cell.income-text { color: var(--green); font-weight: 600; }
-.amount-cell.expense-text { color: var(--red); font-weight: 600; }
-
-.btn-edit {
-  background: none;
-  border: 1px solid var(--blue-light);
-  color: var(--blue);
-  padding: 4px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.7rem;
-  font-family: 'Noto Sans JP', sans-serif;
-  transition: all 0.2s;
-  margin-right: 4px;
-}
-.btn-edit:hover { background: var(--blue-light); }
-
-.btn-del {
-  background: none;
-  border: 1px solid var(--red-light);
-  color: var(--red);
-  padding: 4px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.7rem;
-  font-family: 'Noto Sans JP', sans-serif;
-  transition: all 0.2s;
-}
-.btn-del:hover { background: var(--red-light); }
-
-.action-btns { display: flex; gap: 4px; }
-
-.empty-msg {
-  text-align: center;
-  padding: 30px;
-  color: var(--text-sub);
-  font-size: 0.85rem;
-}
-
-/* Modal */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(44,36,32,0.4);
-  z-index: 100;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 24px;
-  max-width: 520px;
-  width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(44,36,32,0.15);
-  animation: modalIn 0.25s ease;
-}
-@keyframes modalIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-.modal h2 {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-size: 1.1rem;
-  margin-bottom: 16px;
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 20px;
-}
-.btn-cancel, .btn-save {
-  font-family: 'Noto Sans JP', sans-serif;
-  padding: 8px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  border: none;
-  transition: all 0.2s;
-}
-.btn-cancel {
-  background: #f0ebe5;
-  color: var(--text-sub);
-}
-.btn-save {
-  background: var(--accent);
-  color: #fff;
-}
-.btn-save:hover { background: #c0613f; }
-
-.budget-input-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-.budget-input-row label {
-  font-size: 0.8rem;
-  width: 70px;
-}
-.budget-input-row input {
-  flex: 1;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.85rem;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #faf8f6;
-  outline: none;
-}
-
-/* Confirm dialog */
-.confirm-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(44,36,32,0.4);
-  z-index: 150;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-.confirm-overlay.open { display: flex; }
-.confirm-box {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 24px;
-  max-width: 340px;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 8px 40px rgba(44,36,32,0.15);
-  animation: modalIn 0.25s ease;
-}
-.confirm-box p {
-  font-size: 0.9rem;
-  margin-bottom: 20px;
-}
-.confirm-btns {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-.confirm-btns button {
-  font-family: 'Noto Sans JP', sans-serif;
-  padding: 8px 24px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-}
-.confirm-btns .btn-confirm-cancel { background: #f0ebe5; color: var(--text-sub); }
-.confirm-btns .btn-confirm-ok { background: var(--red); color: #fff; }
-.confirm-btns .btn-confirm-ok:hover { background: #a04040; }
-
-/* Recurring list */
-.recurring-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.8rem;
-}
-
-.tab-bar {
-  display: flex;
-  gap: 0;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  margin-bottom: 16px;
-}
-.tab-bar button {
-  flex: 1;
-  padding: 8px;
-  border: none;
-  background: #faf8f6;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.8rem;
-  cursor: pointer;
-  color: var(--text-sub);
-  transition: all 0.2s;
-}
-.tab-bar button.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-/* Month navigation */
-.month-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-.month-nav button {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.2s;
-  color: var(--text);
-}
-.month-nav button:hover { border-color: var(--accent); }
-.month-nav .current-month {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  min-width: 140px;
-  text-align: center;
-}
-
-/* Pie chart with CSS */
-.pie-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-.pie-svg { width: 200px; height: 200px; }
-
-/* responsive */
-@media (max-width: 600px) {
-  .summary { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .summary-card { padding: 12px 8px; }
-  .summary-card .amount { font-size: 1rem; }
-  .form-row { flex-direction: column; }
-  .form-group { min-width: 100%; }
-  .budget-text { width: 90px; font-size: 0.65rem; }
-}
-
-/* File input hidden */
-.file-input { display: none; }
-
-/* Toast */
-.toast {
-  position: fixed;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: var(--text);
-  color: #fff;
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  z-index: 200;
-  opacity: 0;
-  transition: all 0.3s ease;
-  pointer-events: none;
-}
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+@media(max-width:600px){
+  .summary{gap:8px;}.summary-card{padding:12px 8px;}.summary-card .amount{font-size:.95rem;}
+  .form-row{flex-direction:column;}.form-group{min-width:100%;}
+  .stats-row{grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .budget-text{width:90px;font-size:.63rem;}
+  .fv-row{flex-direction:column;}
 }
 </style>
 </head>
 <body>
-
 <div class="container">
   <h1>💰 家計簿ツール</h1>
-
-  <!-- Toolbar -->
   <div class="toolbar">
     <button onclick="openBudgetModal()">🎯 予算設定</button>
     <button onclick="openRecurringModal()">🔁 定期収支</button>
+    <button onclick="openTemplateModal()">⚡ テンプレ</button>
+    <button onclick="openSavingsModal()">🐷 貯金目標</button>
+    <button onclick="openYearlyItemsModal()">📅 年間予算項目</button>
+    <button onclick="toggleDarkMode()">🌙 表示切替</button>
     <button onclick="exportCSV()">📤 CSV出力</button>
     <button onclick="document.getElementById('csvInput').click()">📥 CSV読込</button>
     <button onclick="backupData()">💾 バックアップ</button>
@@ -641,27 +208,22 @@ tbody tr:hover { background: #faf8f6; }
     <input type="file" id="restoreInput" class="file-input" accept=".json" onchange="restoreData(event)">
   </div>
 
-  <!-- Month Navigation -->
   <div class="month-nav">
     <button onclick="changeMonth(-1)">◀</button>
     <div class="current-month" id="currentMonth"></div>
     <button onclick="changeMonth(1)">▶</button>
   </div>
 
-  <!-- Summary -->
   <div class="summary">
-    <div class="summary-card income">
-      <h3>収入</h3>
-      <div class="amount" id="totalIncome">¥0</div>
-    </div>
-    <div class="summary-card expense">
-      <h3>支出</h3>
-      <div class="amount" id="totalExpense">¥0</div>
-    </div>
-    <div class="summary-card balance">
-      <h3>残高</h3>
-      <div class="amount" id="totalBalance">¥0</div>
-    </div>
+    <div class="summary-card income"><h3>収入</h3><div class="amount" id="totalIncome">¥0</div></div>
+    <div class="summary-card expense"><h3>支出</h3><div class="amount" id="totalExpense">¥0</div></div>
+    <div class="summary-card balance"><h3>残高</h3><div class="amount" id="totalBalance">¥0</div></div>
+  </div>
+
+  <!-- Wallet summary -->
+  <div class="card">
+    <div class="card-title">💳 口座別残高（今月）</div>
+    <div class="wallet-summary" id="walletSummary"></div>
   </div>
 
   <!-- Entry Form -->
@@ -675,36 +237,31 @@ tbody tr:hover { background: #faf8f6; }
           <button onclick="setType('income')">収入</button>
         </div>
       </div>
-      <div class="form-group">
-        <label>日付</label>
-        <input type="date" id="entryDate">
-      </div>
-      <div class="form-group">
-        <label>カテゴリ</label>
-        <select id="entryCategory"></select>
-      </div>
-      <div class="form-group">
-        <label>金額</label>
-        <input type="number" id="entryAmount" placeholder="0" min="0">
-      </div>
-      <div class="form-group">
-        <label>店舗</label>
-        <input type="text" id="entryShop" placeholder="任意">
-      </div>
-      <div class="form-group">
-        <label>メモ</label>
-        <input type="text" id="entryMemo" placeholder="任意">
-      </div>
-      <div class="form-group" style="flex:0 0 auto;">
-        <label>&nbsp;</label>
-        <button class="btn-add" onclick="addEntry()">追加</button>
-      </div>
+      <div class="form-group"><label>日付</label><input type="date" id="entryDate"></div>
+      <div class="form-group"><label>カテゴリ</label><select id="entryCategory"></select></div>
+      <div class="form-group"><label>金額</label><input type="number" id="entryAmount" placeholder="0" min="0"></div>
+      <div class="form-group"><label>口座</label><select id="entryWallet"></select></div>
+      <div class="form-group"><label>店舗</label><input type="text" id="entryShop" placeholder="任意"></div>
+      <div class="form-group"><label>メモ</label><input type="text" id="entryMemo" placeholder="任意"></div>
+      <div class="form-group" style="flex:0 0 auto;"><label>&nbsp;</label><button class="btn-add" onclick="addEntry()">追加</button></div>
     </div>
   </div>
 
-  <!-- Budget Achievement (Monthly) -->
+  <!-- Stats -->
   <div class="card">
-    <div class="card-title">🎯 予算達成状況（今月）</div>
+    <div class="card-title">📊 今月のサマリー</div>
+    <div class="stats-row" id="statsRow"></div>
+  </div>
+
+  <!-- Fixed vs Variable -->
+  <div class="card">
+    <div class="card-title">🔒 固定費 vs 変動費</div>
+    <div class="fv-row" id="fvRow"></div>
+  </div>
+
+  <!-- Budget Progress -->
+  <div class="card">
+    <div class="card-title">🎯 月次予算達成状況</div>
     <div id="budgetProgress"></div>
   </div>
 
@@ -712,12 +269,31 @@ tbody tr:hover { background: #faf8f6; }
   <div class="card">
     <div class="card-title">🗓️ 年間予算達成状況</div>
     <div id="yearlyBudgetProgress"></div>
+    <div id="yearlyItemsProgress" style="margin-top:12px;"></div>
+  </div>
+
+  <!-- Savings Goal -->
+  <div class="card" id="savingsCard" style="display:none;">
+    <div class="card-title">🐷 貯金目標</div>
+    <div class="savings-wrap" id="savingsWrap"></div>
+  </div>
+
+  <!-- Month comparison -->
+  <div class="card">
+    <div class="card-title">📊 前月比較</div>
+    <div id="compareChart"></div>
   </div>
 
   <!-- Category Pie -->
   <div class="card">
     <div class="card-title">📊 カテゴリ別支出</div>
     <div class="pie-wrap" id="pieChart"></div>
+  </div>
+
+  <!-- Calendar Heatmap -->
+  <div class="card">
+    <div class="card-title">🗓️ 日別支出ヒートマップ</div>
+    <div id="heatmap"></div>
   </div>
 
   <!-- Monthly Trend -->
@@ -736,14 +312,11 @@ tbody tr:hover { background: #faf8f6; }
         <option value="income">収入のみ</option>
         <option value="expense">支出のみ</option>
       </select>
+      <input type="text" id="filterSearch" placeholder="🔍 検索..." oninput="render()" style="min-width:120px;">
     </div>
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr>
-            <th>日付</th><th>種類</th><th>カテゴリ</th><th>店舗</th><th>メモ</th><th>金額</th><th>操作</th>
-          </tr>
-        </thead>
+        <thead><tr><th>日付</th><th>種類</th><th>カテゴリ</th><th>口座</th><th>店舗</th><th>メモ</th><th>金額</th><th>操作</th></tr></thead>
         <tbody id="historyBody"></tbody>
       </table>
     </div>
@@ -751,615 +324,616 @@ tbody tr:hover { background: #faf8f6; }
 </div>
 
 <!-- Budget Modal -->
-<div class="modal-overlay" id="budgetModal">
-  <div class="modal">
-    <h2>🎯 予算設定</h2>
-    <div class="tab-bar" id="budgetTabs">
-      <button class="active" onclick="switchBudgetTab('monthly')">📅 月次予算</button>
-      <button onclick="switchBudgetTab('yearly')">🗓️ 年間予算</button>
-    </div>
-    <div id="budgetMonthlyInputs"></div>
-    <div id="budgetYearlyInputs" style="display:none"></div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeBudgetModal()">キャンセル</button>
-      <button class="btn-save" onclick="saveBudget()">保存</button>
-    </div>
+<div class="modal-overlay" id="budgetModal"><div class="modal">
+  <h2>🎯 予算設定</h2>
+  <div class="tab-bar" id="budgetTabs">
+    <button class="active" onclick="switchBudgetTab('monthly')">📅 月次予算</button>
+    <button onclick="switchBudgetTab('yearly')">🗓️ 年間予算</button>
+    <button onclick="switchBudgetTab('fixed')">🔒 固定費設定</button>
   </div>
-</div>
+  <div id="budgetMonthlyInputs"></div>
+  <div id="budgetYearlyInputs" style="display:none"></div>
+  <div id="fixedCatInputs" style="display:none"></div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeBudgetModal()">キャンセル</button>
+    <button class="btn-save" onclick="saveBudget()">保存</button>
+  </div>
+</div></div>
 
 <!-- Recurring Modal -->
-<div class="modal-overlay" id="recurringModal">
-  <div class="modal">
-    <h2>🔁 定期収支の管理</h2>
-    <p style="font-size:0.8rem;color:var(--text-sub);margin-bottom:16px;">毎月決まった日に自動で記録される項目を設定します</p>
-
-    <div style="font-weight:600;font-size:0.85rem;margin-bottom:8px;">新規追加</div>
-    <div class="form-row" style="margin-bottom:16px;">
-      <div class="form-group">
-        <label>種類</label>
-        <select id="recType">
-          <option value="expense">支出</option>
-          <option value="income">収入</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>日</label>
-        <input type="number" id="recDay" min="1" max="28" value="1" style="width:60px">
-      </div>
-      <div class="form-group">
-        <label>カテゴリ</label>
-        <select id="recCategory"></select>
-      </div>
-      <div class="form-group">
-        <label>金額</label>
-        <input type="number" id="recAmount" placeholder="0">
-      </div>
-      <div class="form-group">
-        <label>メモ</label>
-        <input type="text" id="recMemo" placeholder="任意">
-      </div>
-      <div class="form-group" style="flex:0 0 auto;">
-        <label>&nbsp;</label>
-        <button class="btn-add" onclick="addRecurring()">追加</button>
-      </div>
-    </div>
-
-    <div style="font-weight:600;font-size:0.85rem;margin-bottom:8px;">登録済み</div>
-    <div id="recurringList"></div>
-
-    <div class="modal-actions">
-      <button class="btn-save" onclick="applyRecurring()">📥 今月分を反映</button>
-      <button class="btn-cancel" onclick="closeRecurringModal()">閉じる</button>
-    </div>
+<div class="modal-overlay" id="recurringModal"><div class="modal">
+  <h2>🔁 定期収支の管理</h2>
+  <p style="font-size:.8rem;color:var(--text-sub);margin-bottom:16px;">毎月決まった日に自動で記録される項目を設定</p>
+  <div class="form-row" style="margin-bottom:16px;">
+    <div class="form-group"><label>種類</label><select id="recType"><option value="expense">支出</option><option value="income">収入</option></select></div>
+    <div class="form-group"><label>日</label><input type="number" id="recDay" min="1" max="28" value="1" style="width:60px"></div>
+    <div class="form-group"><label>カテゴリ</label><select id="recCategory"></select></div>
+    <div class="form-group"><label>金額</label><input type="number" id="recAmount" placeholder="0"></div>
+    <div class="form-group"><label>メモ</label><input type="text" id="recMemo" placeholder="任意"></div>
+    <div class="form-group" style="flex:0 0 auto;"><label>&nbsp;</label><button class="btn-add" onclick="addRecurring()">追加</button></div>
   </div>
-</div>
+  <div id="recurringList"></div>
+  <div class="modal-actions">
+    <button class="btn-save" onclick="applyRecurring()">📥 今月分を反映</button>
+    <button class="btn-cancel" onclick="closeRecurringModal()">閉じる</button>
+  </div>
+</div></div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal"><div class="modal">
+  <h2>✏️ 記録を編集</h2>
+  <input type="hidden" id="editId">
+  <div class="form-row" style="flex-direction:column;gap:12px;">
+    <div class="form-group"><label>種類</label><select id="editType" onchange="updateEditCategories()"><option value="expense">支出</option><option value="income">収入</option></select></div>
+    <div class="form-group"><label>日付</label><input type="date" id="editDate"></div>
+    <div class="form-group"><label>カテゴリ</label><select id="editCategory"></select></div>
+    <div class="form-group"><label>金額</label><input type="number" id="editAmount" min="0"></div>
+    <div class="form-group"><label>口座</label><select id="editWallet"></select></div>
+    <div class="form-group"><label>店舗</label><input type="text" id="editShop"></div>
+    <div class="form-group"><label>メモ</label><input type="text" id="editMemo"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeEditModal()">キャンセル</button>
+    <button class="btn-save" onclick="saveEdit()">保存</button>
+  </div>
+</div></div>
+
+<!-- Template Modal -->
+<div class="modal-overlay" id="templateModal"><div class="modal">
+  <h2>⚡ テンプレート管理</h2>
+  <p style="font-size:.8rem;color:var(--text-sub);margin-bottom:12px;">よく使う記録をワンタップで登録</p>
+  <div class="form-row" style="margin-bottom:16px;">
+    <div class="form-group"><label>ラベル</label><input type="text" id="tplLabel" placeholder="例：朝コンビニ"></div>
+    <div class="form-group"><label>種類</label><select id="tplType"><option value="expense">支出</option><option value="income">収入</option></select></div>
+    <div class="form-group"><label>カテゴリ</label><select id="tplCategory"></select></div>
+    <div class="form-group"><label>金額</label><input type="number" id="tplAmount" placeholder="0"></div>
+    <div class="form-group"><label>口座</label><select id="tplWallet"></select></div>
+    <div class="form-group"><label>店舗</label><input type="text" id="tplShop" placeholder="任意"></div>
+    <div class="form-group" style="flex:0 0 auto;"><label>&nbsp;</label><button class="btn-add" onclick="addTemplate()">追加</button></div>
+  </div>
+  <div id="templateList"></div>
+  <div class="modal-actions"><button class="btn-cancel" onclick="closeTemplateModal()">閉じる</button></div>
+</div></div>
+
+<!-- Savings Modal -->
+<div class="modal-overlay" id="savingsModal"><div class="modal">
+  <h2>🐷 貯金目標設定</h2>
+  <div class="form-row" style="flex-direction:column;gap:12px;">
+    <div class="form-group"><label>目標名</label><input type="text" id="savingsName" placeholder="例：旅行資金"></div>
+    <div class="form-group"><label>目標金額</label><input type="number" id="savingsTarget" placeholder="0"></div>
+    <div class="form-group"><label>期限</label><input type="date" id="savingsDeadline"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeSavingsModal()">キャンセル</button>
+    <button class="btn-save" onclick="saveSavingsGoal()">保存</button>
+  </div>
+</div></div>
+
+<!-- Yearly Budget Items Modal -->
+<div class="modal-overlay" id="ybiModal"><div class="modal">
+  <h2>📅 年間予算項目</h2>
+  <p style="font-size:.8rem;color:var(--text-sub);margin-bottom:12px;">旅行・車検・保険など年間の特別支出を管理</p>
+  <div class="form-row" style="margin-bottom:16px;">
+    <div class="form-group"><label>項目名</label><input type="text" id="ybiName" placeholder="例：家族旅行"></div>
+    <div class="form-group"><label>予算額</label><input type="number" id="ybiAmount" placeholder="0"></div>
+    <div class="form-group"><label>予定月</label><select id="ybiMonth"><option value="0">通年</option></select></div>
+    <div class="form-group" style="flex:0 0 auto;"><label>&nbsp;</label><button class="btn-add" onclick="addYbi()">追加</button></div>
+  </div>
+  <div id="ybiList"></div>
+  <div class="modal-actions"><button class="btn-cancel" onclick="closeYbiModal()">閉じる</button></div>
+</div></div>
 
 <!-- Confirm Dialog -->
-<div class="confirm-overlay" id="confirmOverlay">
-  <div class="confirm-box">
-    <p>この記録を削除しますか？</p>
-    <div class="confirm-btns">
-      <button class="btn-confirm-cancel" onclick="cancelDelete()">キャンセル</button>
-      <button class="btn-confirm-ok" onclick="executeDelete()">削除する</button>
-    </div>
+<div class="confirm-overlay" id="confirmOverlay"><div class="confirm-box">
+  <p>この記録を削除しますか？</p>
+  <div class="confirm-btns">
+    <button class="btn-confirm-cancel" onclick="cancelDelete()">キャンセル</button>
+    <button class="btn-confirm-ok" onclick="executeDelete()">削除する</button>
   </div>
-</div>
+</div></div>
 
 <div class="toast" id="toast"></div>
 
-<!-- Edit Modal -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal">
-    <h2>✏️ 記録を編集</h2>
-    <input type="hidden" id="editId">
-    <div class="form-row" style="flex-direction:column;gap:12px;">
-      <div class="form-group">
-        <label>種類</label>
-        <select id="editType" onchange="updateEditCategories()">
-          <option value="expense">支出</option>
-          <option value="income">収入</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>日付</label>
-        <input type="date" id="editDate">
-      </div>
-      <div class="form-group">
-        <label>カテゴリ</label>
-        <select id="editCategory"></select>
-      </div>
-      <div class="form-group">
-        <label>金額</label>
-        <input type="number" id="editAmount" min="0">
-      </div>
-      <div class="form-group">
-        <label>店舗</label>
-        <input type="text" id="editShop">
-      </div>
-      <div class="form-group">
-        <label>メモ</label>
-        <input type="text" id="editMemo">
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeEditModal()">キャンセル</button>
-      <button class="btn-save" onclick="saveEdit()">保存</button>
-    </div>
-  </div>
-</div>
-
 <script>
-// ─── Data ──────────────────────────────
-const EXPENSE_CATS = ['食費','交通費','日用品','娯楽','光熱費','家賃','医療','その他'];
-const INCOME_CATS = ['給料','副業','その他'];
-const ALL_CATS = [...EXPENSE_CATS, ...INCOME_CATS];
-const CAT_COLORS = {
-  '食費':'#e07050','交通費':'#4a9ec2','日用品':'#8ebe50','娯楽':'#c070c0',
-  '光熱費':'#e0a030','家賃':'#607090','医療':'#50beb0','給料':'#5a9e6f',
-  '副業':'#7abf7a','その他':'#a0a0a0'
-};
+const EXPENSE_CATS=['食費','交通費','日用品','娯楽','光熱費','家賃','医療','通信費','教育','保険','その他'];
+const INCOME_CATS=['給料','副業','投資','その他'];
+const ALL_CATS=[...EXPENSE_CATS,...INCOME_CATS];
+const DEFAULT_WALLETS=['現金','銀行','クレジットカード'];
+const CAT_COLORS={'食費':'#e07050','交通費':'#4a9ec2','日用品':'#8ebe50','娯楽':'#c070c0','光熱費':'#e0a030','家賃':'#607090','医療':'#50beb0','通信費':'#7090c0','教育':'#b08040','保険':'#60a0a0','給料':'#5a9e6f','副業':'#7abf7a','投資':'#40a0d0','その他':'#a0a0a0'};
 
-let entries = JSON.parse(localStorage.getItem('kb_entries') || '[]');
-let budgets = JSON.parse(localStorage.getItem('kb_budgets') || '{}');
-let yearlyBudgets = JSON.parse(localStorage.getItem('kb_yearly_budgets') || '{}');
-let recurring = JSON.parse(localStorage.getItem('kb_recurring') || '[]');
+// Data
+let entries=load('kb_entries',[]);
+let budgets=load('kb_budgets',{});
+let yearlyBudgets=load('kb_yearly_budgets',{});
+let recurring=load('kb_recurring',[]);
+let templates=load('kb_templates',[]);
+let savingsGoal=load('kb_savings',null);
+let wallets=load('kb_wallets',[...DEFAULT_WALLETS]);
+let fixedCats=load('kb_fixed_cats',['家賃','光熱費','通信費','保険']);
+let yearlyBudgetItems=load('kb_ybi',[]);
+let darkMode=load('kb_dark',false);
+let currentType='expense';
+let viewYear,viewMonth;
+let pendingDeleteId=null;
 
-let currentType = 'expense';
-let viewYear, viewMonth;
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+function saveAll(){
+  const pairs={kb_entries:entries,kb_budgets:budgets,kb_yearly_budgets:yearlyBudgets,kb_recurring:recurring,kb_templates:templates,kb_savings:savingsGoal,kb_wallets:wallets,kb_fixed_cats:fixedCats,kb_ybi:yearlyBudgetItems,kb_dark:darkMode};
+  Object.entries(pairs).forEach(([k,v])=>localStorage.setItem(k,JSON.stringify(v)));
+}
+function formatDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function formatYen(n){return'¥'+Number(n).toLocaleString();}
+function shortYen(n){return n>=10000?Math.round(n/10000)+'万':formatYen(n);}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
 
-function init() {
-  const now = new Date();
-  viewYear = now.getFullYear();
-  viewMonth = now.getMonth();
-  document.getElementById('entryDate').value = formatDate(now);
+function init(){
+  if(darkMode)document.documentElement.setAttribute('data-theme','dark');
+  const now=new Date();viewYear=now.getFullYear();viewMonth=now.getMonth();
+  document.getElementById('entryDate').value=formatDate(now);
+  // Populate YBI month select
+  const ybiM=document.getElementById('ybiMonth');
+  for(let i=1;i<=12;i++)ybiM.innerHTML+=`<option value="${i}">${i}月</option>`;
+  populateCategories();populateWallets();populateFilterMonths();render();
+}
+
+function populateCategories(){
+  const sel=document.getElementById('entryCategory');
+  const cats=currentType==='expense'?EXPENSE_CATS:INCOME_CATS;
+  sel.innerHTML=cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+function populateWallets(){
+  ['entryWallet','editWallet','tplWallet'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML=wallets.map(w=>`<option value="${w}">${w}</option>`).join('');
+  });
+}
+
+function setType(type){
+  currentType=type;
+  const btns=document.querySelectorAll('#typeToggle button');
+  btns[0].className=type==='expense'?'active-expense':'';
+  btns[1].className=type==='income'?'active-income':'';
   populateCategories();
-  populateFilterMonths();
-  render();
 }
+function changeMonth(d){viewMonth+=d;if(viewMonth>11){viewMonth=0;viewYear++;}if(viewMonth<0){viewMonth=11;viewYear--;}render();}
 
-function save() {
-  localStorage.setItem('kb_entries', JSON.stringify(entries));
-  localStorage.setItem('kb_budgets', JSON.stringify(budgets));
-  localStorage.setItem('kb_yearly_budgets', JSON.stringify(yearlyBudgets));
-  localStorage.setItem('kb_recurring', JSON.stringify(recurring));
-}
-
-function formatDate(d) {
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
-function formatYen(n) {
-  return '¥' + Number(n).toLocaleString();
-}
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
-}
-
-// ─── Type toggle ─────────────────────
-function setType(type) {
-  currentType = type;
-  const btns = document.querySelectorAll('#typeToggle button');
-  btns[0].className = type === 'expense' ? 'active-expense' : '';
-  btns[1].className = type === 'income' ? 'active-income' : '';
-  populateCategories();
-}
-
-function populateCategories() {
-  const sel = document.getElementById('entryCategory');
-  const cats = currentType === 'expense' ? EXPENSE_CATS : INCOME_CATS;
-  sel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-}
-
-// ─── Month nav ───────────────────────
-function changeMonth(delta) {
-  viewMonth += delta;
-  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-  render();
+// Dark mode
+function toggleDarkMode(){
+  darkMode=!darkMode;
+  document.documentElement.setAttribute('data-theme',darkMode?'dark':'');
+  saveAll();
 }
 
 // ─── Add Entry ───────────────────────
-function addEntry() {
-  const date = document.getElementById('entryDate').value;
-  const category = document.getElementById('entryCategory').value;
-  const amount = parseInt(document.getElementById('entryAmount').value);
-  const shop = document.getElementById('entryShop').value.trim();
-  const memo = document.getElementById('entryMemo').value.trim();
-
-  if (!date || !amount || amount <= 0) { toast('日付と金額を入力してください'); return; }
-
-  entries.push({ id: Date.now(), date, type: currentType, category, amount, shop, memo });
-  entries.sort((a,b) => b.date.localeCompare(a.date));
-  save();
-  document.getElementById('entryAmount').value = '';
-  document.getElementById('entryShop').value = '';
-  document.getElementById('entryMemo').value = '';
-  toast('追加しました');
-  render();
+function addEntry(){
+  const date=document.getElementById('entryDate').value;
+  const category=document.getElementById('entryCategory').value;
+  const amount=parseInt(document.getElementById('entryAmount').value);
+  const wallet=document.getElementById('entryWallet').value;
+  const shop=document.getElementById('entryShop').value.trim();
+  const memo=document.getElementById('entryMemo').value.trim();
+  if(!date||!amount||amount<=0){toast('日付と金額を入力してください');return;}
+  entries.push({id:Date.now(),date,type:currentType,category,amount,wallet,shop,memo});
+  entries.sort((a,b)=>b.date.localeCompare(a.date));
+  saveAll();document.getElementById('entryAmount').value='';document.getElementById('entryShop').value='';document.getElementById('entryMemo').value='';
+  toast('追加しました');render();
 }
+function deleteEntry(id){entries=entries.filter(e=>e.id!==id);saveAll();toast('削除しました');render();}
+function confirmDelete(id){pendingDeleteId=id;document.getElementById('confirmOverlay').classList.add('open');}
+function cancelDelete(){pendingDeleteId=null;document.getElementById('confirmOverlay').classList.remove('open');}
+function executeDelete(){if(pendingDeleteId!==null){deleteEntry(pendingDeleteId);pendingDeleteId=null;}document.getElementById('confirmOverlay').classList.remove('open');}
 
-function deleteEntry(id) {
-  entries = entries.filter(e => e.id !== id);
-  save();
-  toast('削除しました');
-  render();
+// ─── Edit ────────────────────────────
+function openEditModal(id){
+  const e=entries.find(x=>x.id===id);if(!e)return;
+  document.getElementById('editId').value=id;
+  document.getElementById('editType').value=e.type;
+  document.getElementById('editDate').value=e.date;
+  updateEditCategories(e.category);
+  document.getElementById('editAmount').value=e.amount;
+  populateWallets();
+  document.getElementById('editWallet').value=e.wallet||wallets[0];
+  document.getElementById('editShop').value=e.shop||'';
+  document.getElementById('editMemo').value=e.memo||'';
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEditModal(){document.getElementById('editModal').classList.remove('open');}
+function updateEditCategories(sel){
+  const type=document.getElementById('editType').value;
+  const cats=type==='expense'?EXPENSE_CATS:INCOME_CATS;
+  const s=document.getElementById('editCategory');
+  s.innerHTML=cats.map(c=>`<option value="${c}"${c===sel?' selected':''}>${c}</option>`).join('');
+}
+function saveEdit(){
+  const id=parseInt(document.getElementById('editId').value);const e=entries.find(x=>x.id===id);if(!e)return;
+  const amount=parseInt(document.getElementById('editAmount').value);
+  if(!amount||amount<=0){toast('金額を正しく入力してください');return;}
+  e.type=document.getElementById('editType').value;e.date=document.getElementById('editDate').value;
+  e.category=document.getElementById('editCategory').value;e.amount=amount;
+  e.wallet=document.getElementById('editWallet').value;
+  e.shop=document.getElementById('editShop').value.trim();e.memo=document.getElementById('editMemo').value.trim();
+  entries.sort((a,b)=>b.date.localeCompare(a.date));saveAll();closeEditModal();toast('更新しました');render();
 }
 
 // ─── Render ──────────────────────────
-function render() {
-  const ym = viewYear + '-' + String(viewMonth+1).padStart(2,'0');
-  document.getElementById('currentMonth').textContent = `${viewYear}年${viewMonth+1}月`;
+function render(){
+  const ym=viewYear+'-'+String(viewMonth+1).padStart(2,'0');
+  document.getElementById('currentMonth').textContent=`${viewYear}年${viewMonth+1}月`;
+  const me=entries.filter(e=>e.date.startsWith(ym));
+  const inc=me.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
+  const exp=me.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+  document.getElementById('totalIncome').textContent=formatYen(inc);
+  document.getElementById('totalExpense').textContent=formatYen(exp);
+  document.getElementById('totalBalance').textContent=formatYen(inc-exp);
+  renderWallets(me);renderStats(me,exp);renderFV(me,exp);
+  renderBudgetProgress(me);renderYearlyBudget();renderYearlyItems();
+  renderSavings(inc,exp);renderCompare(me);renderPie(me);renderHeatmap();renderTrend();renderHistory();populateFilterMonths();
+}
 
-  const monthEntries = entries.filter(e => e.date.startsWith(ym));
-  const inc = monthEntries.filter(e => e.type === 'income').reduce((s,e) => s + e.amount, 0);
-  const exp = monthEntries.filter(e => e.type === 'expense').reduce((s,e) => s + e.amount, 0);
+// ─── Wallets ─────────────────────────
+function renderWallets(me){
+  const wrap=document.getElementById('walletSummary');
+  const data={};wallets.forEach(w=>data[w]=0);
+  me.forEach(e=>{const w=e.wallet||wallets[0];if(!data[w])data[w]=0;data[w]+=(e.type==='income'?1:-1)*e.amount;});
+  wrap.innerHTML=wallets.map(w=>`<div class="wallet-pill"><div class="wname">${w}</div><div class="wamt">${formatYen(data[w]||0)}</div></div>`).join('');
+}
 
-  document.getElementById('totalIncome').textContent = formatYen(inc);
-  document.getElementById('totalExpense').textContent = formatYen(exp);
-  document.getElementById('totalBalance').textContent = formatYen(inc - exp);
+// ─── Stats ───────────────────────────
+function renderStats(me,exp){
+  const wrap=document.getElementById('statsRow');
+  const daysInMonth=new Date(viewYear,viewMonth+1,0).getDate();
+  const today=new Date();
+  const elapsed=(viewYear===today.getFullYear()&&viewMonth===today.getMonth())?today.getDate():daysInMonth;
+  const avg=elapsed>0?Math.round(exp/elapsed):0;
+  const daily={};me.filter(e=>e.type==='expense').forEach(e=>{const d=e.date;daily[d]=(daily[d]||0)+e.amount;});
+  const dayEntries=Object.entries(daily).sort((a,b)=>b[1]-a[1]);
+  const maxDay=dayEntries.length>0?dayEntries[0]:null;
+  const txCount=me.length;
+  wrap.innerHTML=`
+    <div class="stat-box"><div class="stat-val">${formatYen(avg)}</div><div class="stat-label">日平均支出</div></div>
+    <div class="stat-box"><div class="stat-val">${maxDay?formatYen(maxDay[1]):'—'}</div><div class="stat-label">最高支出日${maxDay?' ('+maxDay[0].slice(5)+')':''}</div></div>
+    <div class="stat-box"><div class="stat-val">${txCount}件</div><div class="stat-label">取引数</div></div>`;
+}
 
-  renderBudgetProgress(monthEntries);
-  renderYearlyBudget();
-  renderPie(monthEntries);
-  renderTrend();
-  renderHistory();
-  populateFilterMonths();
+// ─── Fixed vs Variable ───────────────
+function renderFV(me,totalExp){
+  const wrap=document.getElementById('fvRow');
+  const fixed=me.filter(e=>e.type==='expense'&&fixedCats.includes(e.category)).reduce((s,e)=>s+e.amount,0);
+  const variable=totalExp-fixed;
+  const fPct=totalExp>0?Math.round(fixed/totalExp*100):0;
+  const vPct=totalExp>0?Math.round(variable/totalExp*100):0;
+  wrap.innerHTML=`
+    <div class="fv-box"><div class="fv-label">🔒 固定費</div><div class="fv-amt" style="color:var(--blue)">${formatYen(fixed)}</div><div class="fv-pct">${fPct}%</div></div>
+    <div class="fv-box"><div class="fv-label">📦 変動費</div><div class="fv-amt" style="color:var(--accent)">${formatYen(variable)}</div><div class="fv-pct">${vPct}%</div></div>
+    <div class="fv-box"><div class="fv-label">📊 合計</div><div class="fv-amt" style="color:var(--red)">${formatYen(totalExp)}</div><div class="fv-pct">100%</div></div>`;
 }
 
 // ─── Budget Progress ─────────────────
-function renderBudgetProgress(monthEntries) {
-  const wrap = document.getElementById('budgetProgress');
-  const cats = EXPENSE_CATS;
-  let html = '';
-  let hasBudget = false;
-  cats.forEach(cat => {
-    const b = budgets[cat] || 0;
-    if (b <= 0) return;
-    hasBudget = true;
-    const spent = monthEntries.filter(e => e.type === 'expense' && e.category === cat).reduce((s,e) => s + e.amount, 0);
-    const pct = Math.min((spent / b) * 100, 100);
-    const cls = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
-    html += `<div class="budget-item">
-      <span class="cat-name">${cat}</span>
-      <div class="budget-bar-wrap"><div class="budget-bar ${cls}" style="width:${pct}%"></div></div>
-      <span class="budget-text">${formatYen(spent)} / ${formatYen(b)}</span>
-    </div>`;
+function renderBudgetProgress(me){
+  const wrap=document.getElementById('budgetProgress');let html='',has=false;
+  EXPENSE_CATS.forEach(cat=>{const b=budgets[cat]||0;if(b<=0)return;has=true;
+    const spent=me.filter(e=>e.type==='expense'&&e.category===cat).reduce((s,e)=>s+e.amount,0);
+    const pct=Math.min((spent/b)*100,100);const cls=pct>=100?'over':pct>=80?'warn':'ok';
+    html+=`<div class="budget-item"><span class="cat-name">${cat}</span><div class="budget-bar-wrap"><div class="budget-bar ${cls}" style="width:${pct}%"></div></div><span class="budget-text">${formatYen(spent)} / ${formatYen(b)}</span></div>`;
   });
-  wrap.innerHTML = hasBudget ? html : '<div class="empty-msg">予算が設定されていません</div>';
+  wrap.innerHTML=has?html:'<div class="empty-msg">予算が設定されていません</div>';
+}
+function renderYearlyBudget(){
+  const wrap=document.getElementById('yearlyBudgetProgress');
+  const ye=entries.filter(e=>e.date.startsWith(String(viewYear)));let html='',has=false;
+  EXPENSE_CATS.forEach(cat=>{const b=yearlyBudgets[cat]||0;if(b<=0)return;has=true;
+    const spent=ye.filter(e=>e.type==='expense'&&e.category===cat).reduce((s,e)=>s+e.amount,0);
+    const pct=Math.min((spent/b)*100,100);const cls=pct>=100?'over':pct>=80?'warn':'ok';
+    html+=`<div class="budget-item"><span class="cat-name">${cat}</span><div class="budget-bar-wrap"><div class="budget-bar ${cls}" style="width:${pct}%"></div></div><span class="budget-text">${formatYen(spent)} / ${formatYen(b)}</span></div>`;
+  });
+  wrap.innerHTML=has?html:'<div class="empty-msg">年間カテゴリ予算が設定されていません</div>';
+}
+function renderYearlyItems(){
+  const wrap=document.getElementById('yearlyItemsProgress');
+  if(yearlyBudgetItems.length===0){wrap.innerHTML='';return;}
+  const ye=entries.filter(e=>e.date.startsWith(String(viewYear)));
+  let html='<div style="font-size:.85rem;font-weight:600;margin-bottom:8px;">📅 年間予算項目</div>';
+  yearlyBudgetItems.forEach(item=>{
+    // rough match: sum expenses in that month (or all year if month=0) with memo containing item name
+    let spent=0;
+    if(item.month>0){
+      const ym=viewYear+'-'+String(item.month).padStart(2,'0');
+      spent=ye.filter(e=>e.type==='expense'&&e.date.startsWith(ym)).reduce((s,e)=>s+e.amount,0);
+    }else{
+      spent=ye.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+    }
+    // Use a smarter match: only count entries whose memo or shop contains the item name
+    spent=ye.filter(e=>e.type==='expense'&&(e.memo.includes(item.name)||e.shop.includes(item.name)||e.category.includes(item.name))).reduce((s,e)=>s+e.amount,0);
+    const pct=item.amount>0?Math.min((spent/item.amount)*100,100):0;
+    const cls=pct>=100?'over':pct>=80?'warn':'ok';
+    const monthLabel=item.month>0?` (${item.month}月)`:'（通年）';
+    html+=`<div class="budget-item"><span class="cat-name">${item.name}${monthLabel}</span><div class="budget-bar-wrap"><div class="budget-bar ${cls}" style="width:${pct}%"></div></div><span class="budget-text">${formatYen(spent)} / ${formatYen(item.amount)}</span></div>`;
+  });
+  wrap.innerHTML=html;
 }
 
-function renderYearlyBudget() {
-  const wrap = document.getElementById('yearlyBudgetProgress');
-  const yearEntries = entries.filter(e => e.date.startsWith(String(viewYear)));
-  let html = '';
-  let has = false;
-  EXPENSE_CATS.forEach(cat => {
-    const b = yearlyBudgets[cat] || 0;
-    if (b <= 0) return;
-    has = true;
-    const spent = yearEntries.filter(e => e.type === 'expense' && e.category === cat).reduce((s,e) => s + e.amount, 0);
-    const pct = Math.min((spent / b) * 100, 100);
-    const cls = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
-    html += `<div class="budget-item">
-      <span class="cat-name">${cat}</span>
-      <div class="budget-bar-wrap"><div class="budget-bar ${cls}" style="width:${pct}%"></div></div>
-      <span class="budget-text">${formatYen(spent)} / ${formatYen(b)}</span>
-    </div>`;
-  });
-  wrap.innerHTML = has ? html : '<div class="empty-msg">年間予算が設定されていません</div>';
-}
-
-// ─── Pie Chart (SVG) ─────────────────
-function renderPie(monthEntries) {
-  const wrap = document.getElementById('pieChart');
-  const data = {};
-  monthEntries.filter(e => e.type === 'expense').forEach(e => {
-    data[e.category] = (data[e.category] || 0) + e.amount;
-  });
-  const items = Object.entries(data).sort((a,b) => b[1] - a[1]);
-  const total = items.reduce((s,i) => s + i[1], 0);
-  if (total === 0) { wrap.innerHTML = '<div class="empty-msg">支出データがありません</div>'; return; }
-
-  let angle = 0;
-  let paths = '';
-  items.forEach(([cat, val]) => {
-    const pct = val / total;
-    const a1 = angle;
-    const a2 = angle + pct * 360;
-    const large = pct > 0.5 ? 1 : 0;
-    const r = 90;
-    const cx = 100, cy = 100;
-    const x1 = cx + r * Math.cos((a1-90)*Math.PI/180);
-    const y1 = cy + r * Math.sin((a1-90)*Math.PI/180);
-    const x2 = cx + r * Math.cos((a2-90)*Math.PI/180);
-    const y2 = cy + r * Math.sin((a2-90)*Math.PI/180);
-    paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} Z" fill="${CAT_COLORS[cat]||'#aaa'}" stroke="#fff" stroke-width="1.5"/>`;
-    angle = a2;
-  });
-
-  let legendHtml = items.map(([cat, val]) =>
-    `<span><span class="legend-dot" style="background:${CAT_COLORS[cat]||'#aaa'}"></span>${cat} ${formatYen(val)} (${Math.round(val/total*100)}%)</span>`
-  ).join('');
-
-  wrap.innerHTML = `<svg class="pie-svg" viewBox="0 0 200 200">${paths}</svg><div class="chart-legend">${legendHtml}</div>`;
-}
-
-// ─── Trend Chart ─────────────────────
-function renderTrend() {
-  const wrap = document.getElementById('trendChart');
-  const months = [];
-  for (let i = 5; i >= 0; i--) {
-    let m = viewMonth - i;
-    let y = viewYear;
-    while (m < 0) { m += 12; y--; }
-    months.push({ y, m, label: `${m+1}月` });
+// ─── Savings ─────────────────────────
+function renderSavings(monthInc,monthExp){
+  const card=document.getElementById('savingsCard');
+  const wrap=document.getElementById('savingsWrap');
+  if(!savingsGoal||!savingsGoal.target){card.style.display='none';return;}
+  card.style.display='';
+  // Total savings = sum of all (income - expense)
+  const totalSaved=entries.reduce((s,e)=>s+(e.type==='income'?e.amount:-e.amount),0);
+  const pct=Math.min(Math.max(Math.round(totalSaved/savingsGoal.target*100),0),100);
+  const remaining=Math.max(savingsGoal.target-totalSaved,0);
+  let deadlineText='';
+  if(savingsGoal.deadline){
+    const dl=new Date(savingsGoal.deadline);const now=new Date();
+    const days=Math.ceil((dl-now)/(1000*60*60*24));
+    deadlineText=days>0?`残り${days}日`:'期限超過';
+    if(days>0&&remaining>0)deadlineText+=` / 日あたり${formatYen(Math.ceil(remaining/days))}`;
   }
-  let maxVal = 1;
-  const data = months.map(({ y, m, label }) => {
-    const ym = y + '-' + String(m+1).padStart(2,'0');
-    const me = entries.filter(e => e.date.startsWith(ym));
-    const inc = me.filter(e => e.type === 'income').reduce((s,e) => s + e.amount, 0);
-    const exp = me.filter(e => e.type === 'expense').reduce((s,e) => s + e.amount, 0);
-    maxVal = Math.max(maxVal, inc, exp);
-    return { label, inc, exp };
-  });
-
-  let html = '<div class="bar-chart">';
-  data.forEach(d => {
-    const ih = Math.max((d.inc / maxVal) * 150, d.inc > 0 ? 4 : 0);
-    const eh = Math.max((d.exp / maxVal) * 150, d.exp > 0 ? 4 : 0);
-    html += `<div class="bar-group">
-      <div style="display:flex;gap:3px;align-items:flex-end;height:160px;">
-        <div>
-          <div class="bar-val">${d.inc > 0 ? (d.inc >= 10000 ? Math.round(d.inc/10000)+'万' : formatYen(d.inc)) : ''}</div>
-          <div class="bar income-bar" style="height:${ih}px;width:16px;"></div>
-        </div>
-        <div>
-          <div class="bar-val">${d.exp > 0 ? (d.exp >= 10000 ? Math.round(d.exp/10000)+'万' : formatYen(d.exp)) : ''}</div>
-          <div class="bar expense-bar" style="height:${eh}px;width:16px;"></div>
-        </div>
-      </div>
-      <div class="bar-label">${d.label}</div>
-    </div>`;
-  });
-  html += '</div>';
-  html += '<div class="chart-legend" style="margin-top:8px;"><span><span class="legend-dot" style="background:var(--green)"></span>収入</span><span><span class="legend-dot" style="background:var(--red)"></span>支出</span></div>';
-  wrap.innerHTML = html;
+  wrap.innerHTML=`
+    <div style="font-size:1rem;font-weight:600;margin-bottom:4px;">${savingsGoal.name||'貯金目標'}</div>
+    <div class="savings-info">目標: ${formatYen(savingsGoal.target)} ${deadlineText?'・'+deadlineText:''}</div>
+    <div class="savings-bar-wrap"><div class="savings-bar" style="width:${pct}%"></div></div>
+    <div class="savings-pct">${pct}%</div>
+    <div class="savings-info">${formatYen(Math.max(totalSaved,0))} / ${formatYen(savingsGoal.target)}</div>`;
 }
 
-// ─── History Table ───────────────────
-function populateFilterMonths() {
-  const sel = document.getElementById('filterMonth');
-  const prev = sel.value;
-  const monthSet = new Set();
-  entries.forEach(e => monthSet.add(e.date.substring(0,7)));
-  const current = viewYear + '-' + String(viewMonth+1).padStart(2,'0');
-  monthSet.add(current);
-  const sorted = [...monthSet].sort().reverse();
-  sel.innerHTML = '<option value="all">すべての月</option>' + sorted.map(m => `<option value="${m}">${m.replace('-','年')}月</option>`).join('');
-  if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
-  else sel.value = current;
+// ─── Compare ─────────────────────────
+function renderCompare(me){
+  const wrap=document.getElementById('compareChart');
+  let pm=viewMonth-1,py=viewYear;if(pm<0){pm=11;py--;}
+  const pym=py+'-'+String(pm+1).padStart(2,'0');
+  const prevEntries=entries.filter(e=>e.date.startsWith(pym));
+  const cats=EXPENSE_CATS;let maxVal=1;
+  const data=cats.map(cat=>{
+    const cur=me.filter(e=>e.type==='expense'&&e.category===cat).reduce((s,e)=>s+e.amount,0);
+    const prev=prevEntries.filter(e=>e.type==='expense'&&e.category===cat).reduce((s,e)=>s+e.amount,0);
+    maxVal=Math.max(maxVal,cur,prev);return{cat,cur,prev};
+  }).filter(d=>d.cur>0||d.prev>0);
+  if(data.length===0){wrap.innerHTML='<div class="empty-msg">比較データがありません</div>';return;}
+  let html=`<div style="font-size:.7rem;color:var(--text-sub);margin-bottom:8px;">🔵 ${pm+1}月 / 🟠 ${viewMonth+1}月</div>`;
+  data.forEach(d=>{
+    const pw=Math.round(d.prev/maxVal*100);const cw=Math.round(d.cur/maxVal*100);
+    const diff=d.cur-d.prev;const diffStr=diff>0?`+${formatYen(diff)}`:(diff<0?formatYen(diff):'±0');
+    const diffColor=diff>0?'var(--red)':diff<0?'var(--green)':'var(--text-sub)';
+    html+=`<div class="compare-row"><span class="compare-cat">${d.cat}</span><div class="compare-bars">
+      <div class="compare-bar" style="width:${Math.max(pw,2)}%;background:var(--blue-light);"></div>
+      <div class="compare-bar" style="width:${Math.max(cw,2)}%;background:var(--accent-light);"></div>
+    </div><span class="compare-label" style="color:${diffColor}">${diffStr}</span></div>`;
+  });
+  wrap.innerHTML=html;
 }
 
-function renderHistory() {
-  const tbody = document.getElementById('historyBody');
-  const fm = document.getElementById('filterMonth').value;
-  const ft = document.getElementById('filterType').value;
+// ─── Pie ─────────────────────────────
+function renderPie(me){
+  const wrap=document.getElementById('pieChart');const data={};
+  me.filter(e=>e.type==='expense').forEach(e=>{data[e.category]=(data[e.category]||0)+e.amount;});
+  const items=Object.entries(data).sort((a,b)=>b[1]-a[1]);const total=items.reduce((s,i)=>s+i[1],0);
+  if(total===0){wrap.innerHTML='<div class="empty-msg">支出データがありません</div>';return;}
+  let angle=0,paths='';
+  items.forEach(([cat,val])=>{const pct=val/total;const a1=angle;const a2=angle+pct*360;const large=pct>.5?1:0;const r=90,cx=100,cy=100;
+    const x1=cx+r*Math.cos((a1-90)*Math.PI/180),y1=cy+r*Math.sin((a1-90)*Math.PI/180);
+    const x2=cx+r*Math.cos((a2-90)*Math.PI/180),y2=cy+r*Math.sin((a2-90)*Math.PI/180);
+    paths+=`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} Z" fill="${CAT_COLORS[cat]||'#aaa'}" stroke="var(--card)" stroke-width="1.5"/>`;angle=a2;});
+  const legend=items.map(([cat,val])=>`<span><span class="legend-dot" style="background:${CAT_COLORS[cat]||'#aaa'}"></span>${cat} ${formatYen(val)} (${Math.round(val/total*100)}%)</span>`).join('');
+  wrap.innerHTML=`<svg class="pie-svg" viewBox="0 0 200 200">${paths}</svg><div class="chart-legend">${legend}</div>`;
+}
 
-  let filtered = entries;
-  if (fm !== 'all') filtered = filtered.filter(e => e.date.startsWith(fm));
-  if (ft !== 'all') filtered = filtered.filter(e => e.type === ft);
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">記録がありません。</td></tr>';
-    return;
+// ─── Heatmap ─────────────────────────
+function renderHeatmap(){
+  const wrap=document.getElementById('heatmap');
+  const daysInMonth=new Date(viewYear,viewMonth+1,0).getDate();
+  const firstDay=new Date(viewYear,viewMonth,1).getDay();
+  const ym=viewYear+'-'+String(viewMonth+1).padStart(2,'0');
+  const daily={};
+  entries.filter(e=>e.type==='expense'&&e.date.startsWith(ym)).forEach(e=>{const d=parseInt(e.date.slice(-2));daily[d]=(daily[d]||0)+e.amount;});
+  const maxVal=Math.max(...Object.values(daily),1);
+  const headers=['日','月','火','水','木','金','土'];
+  let html='<div class="heatmap">';
+  headers.forEach(h=>html+=`<div class="hm-header">${h}</div>`);
+  for(let i=0;i<firstDay;i++)html+='<div class="hm-cell hm-empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const val=daily[d]||0;const intensity=val>0?Math.max(.15,val/maxVal):0;
+    const bg=val>0?`rgba(192,80,77,${intensity})`:'var(--card2)';
+    const title=val>0?`${d}日: ${formatYen(val)}`:`${d}日: ¥0`;
+    html+=`<div class="hm-cell" style="background:${bg};" title="${title}">${d}</div>`;
   }
+  html+='</div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-top:6px;font-size:.6rem;color:var(--text-sub);"><span>少ない</span><div style="display:flex;gap:2px;">';
+  [.1,.3,.5,.7,.9].forEach(o=>html+=`<div style="width:14px;height:14px;border-radius:3px;background:rgba(192,80,77,${o})"></div>`);
+  html+='</div><span>多い</span></div>';
+  wrap.innerHTML=html;
+}
 
-  tbody.innerHTML = filtered.map(e => `<tr>
-    <td>${e.date}</td>
-    <td>${e.type === 'income' ? '収入' : '支出'}</td>
-    <td>${e.category}</td>
-    <td>${e.shop || '-'}</td>
-    <td>${e.memo || '-'}</td>
-    <td class="amount-cell ${e.type === 'income' ? 'income-text' : 'expense-text'}">${e.type === 'income' ? '+' : '-'}${formatYen(e.amount)}</td>
+// ─── Trend ───────────────────────────
+function renderTrend(){
+  const wrap=document.getElementById('trendChart');const months=[];
+  for(let i=5;i>=0;i--){let m=viewMonth-i,y=viewYear;while(m<0){m+=12;y--;}months.push({y,m,label:`${m+1}月`});}
+  let maxVal=1;
+  const data=months.map(({y,m,label})=>{const ym=y+'-'+String(m+1).padStart(2,'0');
+    const me2=entries.filter(e=>e.date.startsWith(ym));
+    const inc=me2.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
+    const exp=me2.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+    maxVal=Math.max(maxVal,inc,exp);return{label,inc,exp};});
+  let html='<div class="bar-chart">';
+  data.forEach(d=>{const ih=Math.max((d.inc/maxVal)*150,d.inc>0?4:0);const eh=Math.max((d.exp/maxVal)*150,d.exp>0?4:0);
+    html+=`<div class="bar-group"><div style="display:flex;gap:3px;align-items:flex-end;height:160px;">
+      <div><div class="bar-val">${d.inc>0?shortYen(d.inc):''}</div><div class="bar income-bar" style="height:${ih}px;width:16px;"></div></div>
+      <div><div class="bar-val">${d.exp>0?shortYen(d.exp):''}</div><div class="bar expense-bar" style="height:${eh}px;width:16px;"></div></div>
+    </div><div class="bar-label">${d.label}</div></div>`;});
+  html+='</div><div class="chart-legend" style="margin-top:8px;"><span><span class="legend-dot" style="background:var(--green)"></span>収入</span><span><span class="legend-dot" style="background:var(--red)"></span>支出</span></div>';
+  wrap.innerHTML=html;
+}
+
+// ─── History ─────────────────────────
+function populateFilterMonths(){
+  const sel=document.getElementById('filterMonth');const prev=sel.value;
+  const ms=new Set();entries.forEach(e=>ms.add(e.date.substring(0,7)));
+  const cur=viewYear+'-'+String(viewMonth+1).padStart(2,'0');ms.add(cur);
+  const sorted=[...ms].sort().reverse();
+  sel.innerHTML='<option value="all">すべての月</option>'+sorted.map(m=>`<option value="${m}">${m.replace('-','年')}月</option>`).join('');
+  if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;else sel.value=cur;
+}
+function renderHistory(){
+  const tbody=document.getElementById('historyBody');
+  const fm=document.getElementById('filterMonth').value;
+  const ft=document.getElementById('filterType').value;
+  const fs=document.getElementById('filterSearch').value.trim().toLowerCase();
+  let f=entries;
+  if(fm!=='all')f=f.filter(e=>e.date.startsWith(fm));
+  if(ft!=='all')f=f.filter(e=>e.type===ft);
+  if(fs)f=f.filter(e=>(e.shop||'').toLowerCase().includes(fs)||(e.memo||'').toLowerCase().includes(fs)||(e.category||'').toLowerCase().includes(fs));
+  if(f.length===0){tbody.innerHTML='<tr><td colspan="8" class="empty-msg">記録がありません。</td></tr>';return;}
+  tbody.innerHTML=f.map(e=>`<tr>
+    <td>${e.date}</td><td>${e.type==='income'?'収入':'支出'}</td><td>${e.category}</td><td>${e.wallet||'-'}</td>
+    <td>${e.shop||'-'}</td><td>${e.memo||'-'}</td>
+    <td class="amount-cell ${e.type==='income'?'income-text':'expense-text'}">${e.type==='income'?'+':'-'}${formatYen(e.amount)}</td>
     <td><div class="action-btns"><button class="btn-edit" onclick="openEditModal(${e.id})">編集</button><button class="btn-del" onclick="confirmDelete(${e.id})">削除</button></div></td>
   </tr>`).join('');
 }
 
-// ─── Edit Modal ──────────────────────
-function openEditModal(id) {
-  const e = entries.find(x => x.id === id);
-  if (!e) return;
-  document.getElementById('editId').value = id;
-  document.getElementById('editType').value = e.type;
-  document.getElementById('editDate').value = e.date;
-  updateEditCategories(e.category);
-  document.getElementById('editAmount').value = e.amount;
-  document.getElementById('editShop').value = e.shop || '';
-  document.getElementById('editMemo').value = e.memo || '';
-  document.getElementById('editModal').classList.add('open');
-}
-function closeEditModal() { document.getElementById('editModal').classList.remove('open'); }
-
-function updateEditCategories(selected) {
-  const type = document.getElementById('editType').value;
-  const cats = type === 'expense' ? EXPENSE_CATS : INCOME_CATS;
-  const sel = document.getElementById('editCategory');
-  sel.innerHTML = cats.map(c => `<option value="${c}"${c === selected ? ' selected' : ''}>${c}</option>`).join('');
-}
-
-function saveEdit() {
-  const id = parseInt(document.getElementById('editId').value);
-  const e = entries.find(x => x.id === id);
-  if (!e) return;
-  const amount = parseInt(document.getElementById('editAmount').value);
-  if (!amount || amount <= 0) { toast('金額を正しく入力してください'); return; }
-  e.type = document.getElementById('editType').value;
-  e.date = document.getElementById('editDate').value;
-  e.category = document.getElementById('editCategory').value;
-  e.amount = amount;
-  e.shop = document.getElementById('editShop').value.trim();
-  e.memo = document.getElementById('editMemo').value.trim();
-  entries.sort((a,b) => b.date.localeCompare(a.date));
-  save();
-  closeEditModal();
-  toast('更新しました');
-  render();
-}
-
-let pendingDeleteId = null;
-
-function confirmDelete(id) {
-  pendingDeleteId = id;
-  document.getElementById('confirmOverlay').classList.add('open');
-}
-function cancelDelete() {
-  pendingDeleteId = null;
-  document.getElementById('confirmOverlay').classList.remove('open');
-}
-function executeDelete() {
-  if (pendingDeleteId !== null) {
-    deleteEntry(pendingDeleteId);
-    pendingDeleteId = null;
-  }
-  document.getElementById('confirmOverlay').classList.remove('open');
-}
-
 // ─── Budget Modal ────────────────────
-function openBudgetModal() {
-  const wrap1 = document.getElementById('budgetMonthlyInputs');
-  const wrap2 = document.getElementById('budgetYearlyInputs');
-  wrap1.innerHTML = EXPENSE_CATS.map(c => `<div class="budget-input-row"><label>${c}</label><input type="number" data-cat="${c}" data-scope="monthly" value="${budgets[c]||0}" min="0"></div>`).join('');
-  wrap2.innerHTML = EXPENSE_CATS.map(c => `<div class="budget-input-row"><label>${c}</label><input type="number" data-cat="${c}" data-scope="yearly" value="${yearlyBudgets[c]||0}" min="0"></div>`).join('');
-  document.getElementById('budgetModal').classList.add('open');
+function openBudgetModal(){
+  document.getElementById('budgetMonthlyInputs').innerHTML=EXPENSE_CATS.map(c=>`<div class="budget-input-row"><label>${c}</label><input type="number" data-cat="${c}" data-scope="monthly" value="${budgets[c]||0}" min="0"></div>`).join('');
+  document.getElementById('budgetYearlyInputs').innerHTML=EXPENSE_CATS.map(c=>`<div class="budget-input-row"><label>${c}</label><input type="number" data-cat="${c}" data-scope="yearly" value="${yearlyBudgets[c]||0}" min="0"></div>`).join('');
+  document.getElementById('fixedCatInputs').innerHTML='<p style="font-size:.8rem;color:var(--text-sub);margin-bottom:10px;">固定費として扱うカテゴリを選択</p>'+EXPENSE_CATS.map(c=>`<label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:.85rem;cursor:pointer;"><input type="checkbox" data-fixcat="${c}" ${fixedCats.includes(c)?'checked':''}> ${c}</label>`).join('');
+  document.getElementById('budgetModal').classList.add('open');switchBudgetTab('monthly');
 }
-function closeBudgetModal() { document.getElementById('budgetModal').classList.remove('open'); }
-function switchBudgetTab(tab) {
-  const btns = document.querySelectorAll('#budgetTabs button');
-  btns[0].className = tab === 'monthly' ? 'active' : '';
-  btns[1].className = tab === 'yearly' ? 'active' : '';
-  document.getElementById('budgetMonthlyInputs').style.display = tab === 'monthly' ? '' : 'none';
-  document.getElementById('budgetYearlyInputs').style.display = tab === 'yearly' ? '' : 'none';
+function closeBudgetModal(){document.getElementById('budgetModal').classList.remove('open');}
+function switchBudgetTab(tab){
+  const btns=document.querySelectorAll('#budgetTabs button');
+  btns.forEach(b=>b.className='');
+  if(tab==='monthly')btns[0].className='active';else if(tab==='yearly')btns[1].className='active';else btns[2].className='active';
+  document.getElementById('budgetMonthlyInputs').style.display=tab==='monthly'?'':'none';
+  document.getElementById('budgetYearlyInputs').style.display=tab==='yearly'?'':'none';
+  document.getElementById('fixedCatInputs').style.display=tab==='fixed'?'':'none';
 }
-function saveBudget() {
-  document.querySelectorAll('#budgetMonthlyInputs input').forEach(inp => {
-    budgets[inp.dataset.cat] = parseInt(inp.value) || 0;
-  });
-  document.querySelectorAll('#budgetYearlyInputs input').forEach(inp => {
-    yearlyBudgets[inp.dataset.cat] = parseInt(inp.value) || 0;
-  });
-  save(); closeBudgetModal(); toast('予算を保存しました'); render();
+function saveBudget(){
+  document.querySelectorAll('#budgetMonthlyInputs input').forEach(i=>budgets[i.dataset.cat]=parseInt(i.value)||0);
+  document.querySelectorAll('#budgetYearlyInputs input').forEach(i=>yearlyBudgets[i.dataset.cat]=parseInt(i.value)||0);
+  fixedCats=[];document.querySelectorAll('[data-fixcat]').forEach(i=>{if(i.checked)fixedCats.push(i.dataset.fixcat);});
+  saveAll();closeBudgetModal();toast('保存しました');render();
 }
 
-// ─── Recurring Modal ─────────────────
-function openRecurringModal() {
-  const sel = document.getElementById('recCategory');
-  sel.innerHTML = [...EXPENSE_CATS, ...INCOME_CATS].map(c => `<option value="${c}">${c}</option>`).join('');
-  renderRecurringList();
-  document.getElementById('recurringModal').classList.add('open');
+// ─── Recurring ───────────────────────
+function openRecurringModal(){
+  document.getElementById('recCategory').innerHTML=[...EXPENSE_CATS,...INCOME_CATS].map(c=>`<option value="${c}">${c}</option>`).join('');
+  renderRecurringList();document.getElementById('recurringModal').classList.add('open');
 }
-function closeRecurringModal() { document.getElementById('recurringModal').classList.remove('open'); }
-
-function addRecurring() {
-  const type = document.getElementById('recType').value;
-  const day = parseInt(document.getElementById('recDay').value) || 1;
-  const category = document.getElementById('recCategory').value;
-  const amount = parseInt(document.getElementById('recAmount').value);
-  const memo = document.getElementById('recMemo').value.trim();
-  if (!amount || amount <= 0) { toast('金額を入力してください'); return; }
-  recurring.push({ id: Date.now(), type, day, category, amount, memo });
-  save(); renderRecurringList(); toast('追加しました');
-  document.getElementById('recAmount').value = '';
-  document.getElementById('recMemo').value = '';
+function closeRecurringModal(){document.getElementById('recurringModal').classList.remove('open');}
+function addRecurring(){
+  const type=document.getElementById('recType').value;const day=parseInt(document.getElementById('recDay').value)||1;
+  const category=document.getElementById('recCategory').value;const amount=parseInt(document.getElementById('recAmount').value);
+  const memo=document.getElementById('recMemo').value.trim();
+  if(!amount||amount<=0){toast('金額を入力してください');return;}
+  recurring.push({id:Date.now(),type,day,category,amount,memo});saveAll();renderRecurringList();toast('追加しました');
+  document.getElementById('recAmount').value='';document.getElementById('recMemo').value='';
 }
-function deleteRecurring(id) {
-  recurring = recurring.filter(r => r.id !== id);
-  save(); renderRecurringList(); toast('削除しました');
+function deleteRecurring(id){recurring=recurring.filter(r=>r.id!==id);saveAll();renderRecurringList();toast('削除しました');}
+function renderRecurringList(){
+  const wrap=document.getElementById('recurringList');
+  if(recurring.length===0){wrap.innerHTML='<div class="empty-msg">登録なし</div>';return;}
+  wrap.innerHTML=recurring.map(r=>`<div class="recurring-item"><span>毎月${r.day}日 / ${r.type==='income'?'収入':'支出'} / ${r.category} / ${formatYen(r.amount)}${r.memo?' / '+r.memo:''}</span><button class="btn-del" onclick="deleteRecurring(${r.id})">削除</button></div>`).join('');
 }
-function renderRecurringList() {
-  const wrap = document.getElementById('recurringList');
-  if (recurring.length === 0) { wrap.innerHTML = '<div class="empty-msg">登録なし</div>'; return; }
-  wrap.innerHTML = recurring.map(r => `<div class="recurring-item">
-    <span>毎月${r.day}日 / ${r.type === 'income' ? '収入' : '支出'} / ${r.category} / ${formatYen(r.amount)}${r.memo ? ' / '+r.memo : ''}</span>
-    <button class="btn-del" onclick="deleteRecurring(${r.id})">削除</button>
-  </div>`).join('');
-}
-function applyRecurring() {
-  const ym = viewYear + '-' + String(viewMonth+1).padStart(2,'0');
-  let added = 0;
-  recurring.forEach(r => {
-    const date = ym + '-' + String(r.day).padStart(2,'0');
-    const exists = entries.some(e => e.date === date && e.category === r.category && e.amount === r.amount && e.memo === (r.memo || '') && e.type === r.type);
-    if (!exists) {
-      entries.push({ id: Date.now() + added, date, type: r.type, category: r.category, amount: r.amount, shop: '', memo: r.memo || '' });
-      added++;
-    }
-  });
-  entries.sort((a,b) => b.date.localeCompare(a.date));
-  save(); toast(`${added}件反映しました`); render();
+function applyRecurring(){
+  const ym=viewYear+'-'+String(viewMonth+1).padStart(2,'0');let added=0;
+  recurring.forEach(r=>{const date=ym+'-'+String(r.day).padStart(2,'0');
+    const exists=entries.some(e=>e.date===date&&e.category===r.category&&e.amount===r.amount&&e.type===r.type);
+    if(!exists){entries.push({id:Date.now()+added,date,type:r.type,category:r.category,amount:r.amount,wallet:wallets[0],shop:'',memo:r.memo||''});added++;}
+  });entries.sort((a,b)=>b.date.localeCompare(a.date));saveAll();toast(`${added}件反映しました`);render();
 }
 
-// ─── CSV Export / Import ─────────────
-function exportCSV() {
-  let csv = '\uFEFF日付,種類,カテゴリ,店舗,メモ,金額\n';
-  entries.forEach(e => {
-    csv += `${e.date},${e.type === 'income' ? '収入' : '支出'},${e.category},${e.shop||''},${e.memo||''},${e.amount}\n`;
-  });
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `kakeibo_${formatDate(new Date())}.csv`;
-  a.click();
-  toast('CSVを出力しました');
+// ─── Templates ───────────────────────
+function openTemplateModal(){
+  document.getElementById('tplCategory').innerHTML=[...EXPENSE_CATS,...INCOME_CATS].map(c=>`<option value="${c}">${c}</option>`).join('');
+  populateWallets();renderTemplateList();document.getElementById('templateModal').classList.add('open');
+}
+function closeTemplateModal(){document.getElementById('templateModal').classList.remove('open');}
+function addTemplate(){
+  const label=document.getElementById('tplLabel').value.trim();const amount=parseInt(document.getElementById('tplAmount').value);
+  if(!label){toast('ラベルを入力してください');return;}if(!amount||amount<=0){toast('金額を入力してください');return;}
+  templates.push({id:Date.now(),label,type:document.getElementById('tplType').value,category:document.getElementById('tplCategory').value,
+    amount,wallet:document.getElementById('tplWallet').value,shop:document.getElementById('tplShop').value.trim()});
+  saveAll();renderTemplateList();toast('追加しました');document.getElementById('tplLabel').value='';document.getElementById('tplAmount').value='';document.getElementById('tplShop').value='';
+}
+function deleteTemplate(id){templates=templates.filter(t=>t.id!==id);saveAll();renderTemplateList();toast('削除しました');}
+function useTemplate(id){
+  const t=templates.find(x=>x.id===id);if(!t)return;
+  entries.push({id:Date.now(),date:formatDate(new Date()),type:t.type,category:t.category,amount:t.amount,wallet:t.wallet||wallets[0],shop:t.shop||'',memo:t.label});
+  entries.sort((a,b)=>b.date.localeCompare(a.date));saveAll();toast(`「${t.label}」を追加しました`);render();
+}
+function renderTemplateList(){
+  const wrap=document.getElementById('templateList');
+  if(templates.length===0){wrap.innerHTML='<div class="empty-msg">テンプレートなし</div>';return;}
+  wrap.innerHTML=templates.map(t=>`<div class="tpl-item"><span>${t.label}（${t.type==='income'?'収入':'支出'} / ${t.category} / ${formatYen(t.amount)}）</span><div><button class="btn-use" onclick="useTemplate(${t.id})">使う</button><button class="btn-del" onclick="deleteTemplate(${t.id})" style="margin-left:4px;">削除</button></div></div>`).join('');
 }
 
-function importCSV(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const lines = e.target.result.split('\n').filter(l => l.trim());
-    let added = 0;
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',');
-      if (cols.length < 6) continue;
-      const type = cols[1].trim() === '収入' ? 'income' : 'expense';
-      entries.push({
-        id: Date.now() + i,
-        date: cols[0].trim(),
-        type,
-        category: cols[2].trim(),
-        shop: cols[3].trim(),
-        memo: cols[4].trim(),
-        amount: parseInt(cols[5]) || 0
-      });
-      added++;
-    }
-    entries.sort((a,b) => b.date.localeCompare(a.date));
-    save(); toast(`${added}件読み込みました`); render();
-  };
-  reader.readAsText(file);
-  event.target.value = '';
+// ─── Savings Modal ───────────────────
+function openSavingsModal(){
+  if(savingsGoal){document.getElementById('savingsName').value=savingsGoal.name||'';document.getElementById('savingsTarget').value=savingsGoal.target||'';document.getElementById('savingsDeadline').value=savingsGoal.deadline||'';}
+  document.getElementById('savingsModal').classList.add('open');
+}
+function closeSavingsModal(){document.getElementById('savingsModal').classList.remove('open');}
+function saveSavingsGoal(){
+  const name=document.getElementById('savingsName').value.trim();const target=parseInt(document.getElementById('savingsTarget').value);
+  const deadline=document.getElementById('savingsDeadline').value;
+  if(!target||target<=0){toast('目標金額を入力してください');return;}
+  savingsGoal={name,target,deadline};saveAll();closeSavingsModal();toast('貯金目標を設定しました');render();
+}
+
+// ─── Yearly Budget Items ─────────────
+function openYbiModal(){renderYbiList();document.getElementById('ybiModal').classList.add('open');}
+function closeYbiModal(){document.getElementById('ybiModal').classList.remove('open');}
+function addYbi(){
+  const name=document.getElementById('ybiName').value.trim();const amount=parseInt(document.getElementById('ybiAmount').value);
+  const month=parseInt(document.getElementById('ybiMonth').value);
+  if(!name){toast('項目名を入力してください');return;}if(!amount||amount<=0){toast('予算額を入力してください');return;}
+  yearlyBudgetItems.push({id:Date.now(),name,amount,month});saveAll();renderYbiList();toast('追加しました');render();
+  document.getElementById('ybiName').value='';document.getElementById('ybiAmount').value='';
+}
+function deleteYbi(id){yearlyBudgetItems=yearlyBudgetItems.filter(i=>i.id!==id);saveAll();renderYbiList();toast('削除しました');render();}
+function renderYbiList(){
+  const wrap=document.getElementById('ybiList');
+  if(yearlyBudgetItems.length===0){wrap.innerHTML='<div class="empty-msg">項目なし</div>';return;}
+  wrap.innerHTML=yearlyBudgetItems.map(i=>`<div class="ybi-item"><span>${i.name} / ${formatYen(i.amount)} / ${i.month>0?i.month+'月':'通年'}</span><button class="btn-del" onclick="deleteYbi(${i.id})">削除</button></div>`).join('');
+}
+
+// ─── CSV ─────────────────────────────
+function exportCSV(){
+  let csv='\uFEFF日付,種類,カテゴリ,口座,店舗,メモ,金額\n';
+  entries.forEach(e=>csv+=`${e.date},${e.type==='income'?'収入':'支出'},${e.category},${e.wallet||''},${e.shop||''},${e.memo||''},${e.amount}\n`);
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=`kakeibo_${formatDate(new Date())}.csv`;a.click();toast('CSVを出力しました');
+}
+function importCSV(event){
+  const file=event.target.files[0];if(!file)return;const reader=new FileReader();
+  reader.onload=function(e){const lines=e.target.result.split('\n').filter(l=>l.trim());let added=0;
+    for(let i=1;i<lines.length;i++){const c=lines[i].split(',');if(c.length<6)continue;
+      const type=c[1].trim()==='収入'?'income':'expense';
+      entries.push({id:Date.now()+i,date:c[0].trim(),type,category:c[2].trim(),wallet:c.length>=7?c[3].trim():'',shop:c.length>=7?c[4].trim():c[3].trim(),memo:c.length>=7?c[5].trim():c[4].trim(),amount:parseInt(c[c.length-1])||0});added++;}
+    entries.sort((a,b)=>b.date.localeCompare(a.date));saveAll();toast(`${added}件読み込みました`);render();};
+  reader.readAsText(file);event.target.value='';
 }
 
 // ─── Backup / Restore ────────────────
-function backupData() {
-  const data = { entries, budgets, yearlyBudgets, recurring, version: 1 };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `kakeibo_backup_${formatDate(new Date())}.json`;
-  a.click();
-  toast('バックアップしました');
+function backupData(){
+  const data={entries,budgets,yearlyBudgets,recurring,templates,savingsGoal,wallets,fixedCats,yearlyBudgetItems,darkMode,version:2};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=`kakeibo_backup_${formatDate(new Date())}.json`;a.click();toast('バックアップしました');
+}
+function restoreData(event){
+  const file=event.target.files[0];if(!file)return;const reader=new FileReader();
+  reader.onload=function(e){try{const d=JSON.parse(e.target.result);
+    if(d.entries)entries=d.entries;if(d.budgets)budgets=d.budgets;if(d.yearlyBudgets)yearlyBudgets=d.yearlyBudgets;
+    if(d.recurring)recurring=d.recurring;if(d.templates)templates=d.templates;if(d.savingsGoal!==undefined)savingsGoal=d.savingsGoal;
+    if(d.wallets)wallets=d.wallets;if(d.fixedCats)fixedCats=d.fixedCats;if(d.yearlyBudgetItems)yearlyBudgetItems=d.yearlyBudgetItems;
+    if(d.darkMode!==undefined){darkMode=d.darkMode;document.documentElement.setAttribute('data-theme',darkMode?'dark':'');}
+    saveAll();populateWallets();toast('復元しました');render();}catch{toast('ファイルの読み込みに失敗しました');}};
+  reader.readAsText(file);event.target.value='';
 }
 
-function restoreData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (data.entries) entries = data.entries;
-      if (data.budgets) budgets = data.budgets;
-      if (data.yearlyBudgets) yearlyBudgets = data.yearlyBudgets;
-      if (data.recurring) recurring = data.recurring;
-      save(); toast('復元しました'); render();
-    } catch { toast('ファイルの読み込みに失敗しました'); }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
-// Close modals on overlay click
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
-});
-document.getElementById('confirmOverlay').addEventListener('click', e => {
-  if (e.target.id === 'confirmOverlay') cancelDelete();
-});
+// Close modals
+document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+document.getElementById('confirmOverlay').addEventListener('click',e=>{if(e.target.id==='confirmOverlay')cancelDelete();});
 
 init();
 </script>
