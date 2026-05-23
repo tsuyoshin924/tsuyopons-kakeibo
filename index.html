@@ -38,6 +38,7 @@ body {
   max-width: 900px;
   margin: 0 auto;
   padding: 20px 16px 80px;
+  overflow: hidden;
 }
 
 h1 {
@@ -114,6 +115,8 @@ h1 {
   padding: 20px;
   margin-bottom: 20px;
   box-shadow: var(--shadow);
+  overflow: hidden;
+  min-width: 0;
 }
 .card-title {
   font-family: 'M PLUS Rounded 1c', sans-serif;
@@ -331,9 +334,11 @@ h1 {
 .table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  max-width: 100%;
 }
 table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
   font-size: 0.8rem;
 }
