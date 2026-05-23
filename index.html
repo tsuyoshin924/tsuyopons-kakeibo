@@ -227,6 +227,24 @@ tbody tr:hover{background:var(--card2);}
 /* Quick input button */
 .quick-input-btn{width:100%;padding:13px;border:none;background:var(--accent);color:#fff;border-radius:var(--radius);font-family:'Noto Sans JP',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:16px;}
 .quick-input-btn:hover{filter:brightness(.92);}
+.top-btns{display:flex;gap:10px;margin-bottom:16px;}
+.top-btns .quick-input-btn{margin-bottom:0;flex:1;}
+.btn-scan{flex:1;padding:13px;border:none;background:var(--blue);color:#fff;border-radius:var(--radius);font-family:'Noto Sans JP',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-scan:hover{filter:brightness(.92);}
+
+/* Scan modal */
+.scan-drop{border:2px dashed var(--border);border-radius:var(--radius);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--card2);position:relative;}
+.scan-drop:hover,.scan-drop.drag{border-color:var(--blue);background:var(--blue-light);}
+.scan-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.scan-preview{max-width:100%;max-height:220px;border-radius:8px;margin:12px auto;display:block;}
+.scan-result{background:var(--card2);border-radius:10px;padding:16px;margin-top:14px;}
+.scan-result-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.scan-result-row label{font-size:.72rem;color:var(--text-sub);width:70px;flex-shrink:0;}
+.scan-result-row input,.scan-result-row select{flex:1;font-family:'Noto Sans JP',sans-serif;font-size:.85rem;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);outline:none;}
+.scan-items{font-size:.75rem;color:var(--text-sub);margin-top:6px;padding:8px;background:var(--card);border-radius:6px;line-height:1.8;}
+.scan-loading{text-align:center;padding:24px;color:var(--text-sub);}
+.scan-loading .spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 /* Quick template picker modal */
 .qtpl-grid{display:flex;flex-wrap:wrap;gap:10px;padding:4px 0;}
@@ -298,8 +316,10 @@ tbody tr:hover{background:var(--card2);}
     <div class="summary-card balance"><h3>残高</h3><div class="amount" id="totalBalance">¥0</div></div>
   </div>
 
-  <!-- Quick input button -->
-  <button class="quick-input-btn" onclick="openQuickModal()">⚡ クイック入力</button>
+  <div class="top-btns">
+    <button class="quick-input-btn" onclick="openQuickModal()">⚡ クイック入力</button>
+    <button class="btn-scan" onclick="openScanModal()">📷 レシートスキャン</button>
+  </div>
 
   <!-- Entry Form -->
   <div class="card">
@@ -619,6 +639,47 @@ tbody tr:hover{background:var(--card2);}
   </div>
   <div id="ybiList"></div>
   <div class="modal-actions"><button class="btn-cancel" onclick="closeYbiModal()">閉じる</button></div>
+</div></div>
+
+<!-- Receipt Scan Modal -->
+<div class="modal-overlay" id="scanModal"><div class="modal" style="max-width:560px;">
+  <h2>📷 レシートスキャン</h2>
+  <div id="scan-body">
+    <div class="scan-drop" id="scanDrop">
+      <input type="file" id="scanFileInput" accept="image/*" capture="environment" onchange="onScanFile(event)">
+      <div style="font-size:2.5rem;margin-bottom:8px;">📷</div>
+      <div style="font-size:.9rem;font-weight:600;margin-bottom:4px;">タップして撮影 / 画像を選択</div>
+      <div style="font-size:.75rem;color:var(--text-sub);">レシートをAIが自動解析して入力します</div>
+    </div>
+    <img id="scanPreview" class="scan-preview" style="display:none;">
+  </div>
+  <div id="scan-loading" style="display:none;" class="scan-loading">
+    <div class="spinner"></div>
+    <div style="font-size:.85rem;">AIがレシートを解析中...</div>
+  </div>
+  <div id="scan-result" style="display:none;">
+    <div class="scan-result">
+      <div style="font-size:.8rem;font-weight:600;margin-bottom:12px;">📋 解析結果（修正して確定）</div>
+      <div class="scan-result-row"><label>日付</label><input type="date" id="sc-date"></div>
+      <div class="scan-result-row"><label>店舗名</label><input type="text" id="sc-shop"></div>
+      <div class="scan-result-row"><label>金額</label><input type="number" id="sc-amount" min="0"></div>
+      <div class="scan-result-row"><label>カテゴリ</label>
+        <select id="sc-category">
+          <option>食費</option><option>交通費</option><option>日用品</option><option>娯楽</option>
+          <option>光熱費</option><option>家賃</option><option>医療</option><option>通信費</option>
+          <option>教育</option><option>保険</option><option>その他</option>
+        </select>
+      </div>
+      <div class="scan-result-row"><label>口座</label><select id="sc-wallet"></select></div>
+      <div class="scan-result-row"><label>メモ</label><input type="text" id="sc-memo"></div>
+      <div id="sc-items" class="scan-items"></div>
+    </div>
+  </div>
+  <div id="scan-error" style="display:none;color:var(--red);font-size:.82rem;padding:12px;background:var(--red-light);border-radius:8px;margin-top:12px;"></div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeScanModal()">キャンセル</button>
+    <button class="btn-save" id="sc-confirm-btn" style="display:none;" onclick="confirmScan()">✅ この内容で追加</button>
+  </div>
 </div></div>
 
 <!-- Transfer Modal -->
@@ -1246,6 +1307,113 @@ function restoreData(event){
 // Close modals
 document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
 document.getElementById('confirmOverlay').addEventListener('click',e=>{if(e.target.id==='confirmOverlay')cancelDelete();});
+
+// ─── Receipt Scan ────────────────────
+let scanImageBase64=null;
+
+function openScanModal(){
+  scanImageBase64=null;
+  document.getElementById('scan-body').style.display='';
+  document.getElementById('scan-loading').style.display='none';
+  document.getElementById('scan-result').style.display='none';
+  document.getElementById('scan-error').style.display='none';
+  document.getElementById('sc-confirm-btn').style.display='none';
+  document.getElementById('scanPreview').style.display='none';
+  document.getElementById('scanFileInput').value='';
+  document.getElementById('sc-wallet').innerHTML=wallets.map(w=>`<option value="${w}">${w}</option>`).join('');
+  document.getElementById('scanModal').classList.add('open');
+}
+function closeScanModal(){document.getElementById('scanModal').classList.remove('open');}
+
+async function onScanFile(event){
+  const file=event.target.files[0];if(!file)return;
+  // Show preview
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    const dataUrl=e.target.result;
+    scanImageBase64=dataUrl.split(',')[1];
+    const preview=document.getElementById('scanPreview');
+    preview.src=dataUrl;preview.style.display='block';
+    // Start analysis
+    document.getElementById('scan-body').style.display='none';
+    document.getElementById('scan-loading').style.display='';
+    document.getElementById('scan-result').style.display='none';
+    document.getElementById('scan-error').style.display='none';
+    document.getElementById('sc-confirm-btn').style.display='none';
+    await analyzeReceipt(scanImageBase64);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeReceipt(base64){
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{
+          role:'user',
+          content:[
+            {type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64}},
+            {type:'text',text:`このレシート画像から情報を抽出してください。必ず以下のJSON形式のみで返してください（説明文・マークダウン不要）:
+{"date":"YYYY-MM-DD","shop":"店舗名","amount":合計金額の数値,"category":"食費|交通費|日用品|娯楽|光熱費|家賃|医療|通信費|教育|保険|その他のいずれか","items":["商品1","商品2"],"memo":""}
+・dateが不明な場合は今日の日付(${formatDate(new Date())})
+・amountは税込み合計金額（数値のみ）
+・categoryは内容から最適なものを選択
+・itemsは主要な商品名を最大5件`}
+          ]
+        }]
+      })
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||'APIエラー');
+    const text=data.content.find(b=>b.type==='text')?.text||'';
+    const json=JSON.parse(text.replace(/```json|```/g,'').trim());
+    showScanResult(json);
+  }catch(err){
+    document.getElementById('scan-loading').style.display='none';
+    document.getElementById('scan-body').style.display='';
+    const errEl=document.getElementById('scan-error');
+    errEl.style.display='';
+    errEl.textContent='解析に失敗しました: '+err.message;
+  }
+}
+
+function showScanResult(json){
+  document.getElementById('scan-loading').style.display='none';
+  document.getElementById('scan-result').style.display='';
+  document.getElementById('sc-confirm-btn').style.display='';
+  document.getElementById('sc-date').value=json.date||formatDate(new Date());
+  document.getElementById('sc-shop').value=json.shop||'';
+  document.getElementById('sc-amount').value=json.amount||'';
+  document.getElementById('sc-memo').value=json.memo||'';
+  // Set category
+  const catSel=document.getElementById('sc-category');
+  for(let o of catSel.options){if(o.value===json.category){catSel.value=json.category;break;}}
+  // Show items
+  const items=json.items||[];
+  const itemsEl=document.getElementById('sc-items');
+  itemsEl.style.display=items.length>0?'':'none';
+  itemsEl.innerHTML=items.length>0?'🛒 '+items.join('・'):'';
+}
+
+function confirmScan(){
+  const amount=parseInt(document.getElementById('sc-amount').value);
+  const date=document.getElementById('sc-date').value;
+  if(!amount||amount<=0){toast('金額を確認してください');return;}
+  entries.push({
+    id:Date.now(),date,type:'expense',
+    category:document.getElementById('sc-category').value,
+    amount,
+    wallet:document.getElementById('sc-wallet').value,
+    shop:document.getElementById('sc-shop').value.trim(),
+    memo:document.getElementById('sc-memo').value.trim()
+  });
+  entries.sort((a,b)=>b.date.localeCompare(a.date));
+  saveAll();closeScanModal();toast('レシートを記録しました');render();
+}
 
 // ─── View switching ──────────────────
 const SV_CAT_ICONS={'普通預金':'🏦','定期預金':'🔒','NISA':'📈','iDeCo':'👴','株・投資信託':'📊','外貨':'💱','その他':'💰'};
