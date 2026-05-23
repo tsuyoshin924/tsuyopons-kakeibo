@@ -196,6 +196,19 @@ tbody tr:hover{background:var(--card2);}
 /* Yearly budget items */
 .ybi-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.8rem;}
 
+/* Quick templates */
+.quick-tpl-wrap{display:flex;flex-wrap:wrap;gap:8px;}
+.quick-tpl-chip{display:flex;flex-direction:column;align-items:flex-start;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:all .15s;font-family:'Noto Sans JP',sans-serif;color:var(--text);min-width:100px;}
+.quick-tpl-chip:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 2px 8px rgba(44,36,32,.08);}
+.quick-tpl-chip:active{transform:translateY(0) scale(.97);}
+.qtc-label{font-size:.82rem;font-weight:600;margin-bottom:2px;}
+.qtc-meta{font-size:.65rem;color:var(--text-sub);}
+.qtc-amt{font-family:'M PLUS Rounded 1c',sans-serif;font-size:.95rem;font-weight:700;margin-top:2px;}
+.qtc-amt.expense-text{color:var(--red);}
+.qtc-amt.income-text{color:var(--green);}
+.btn-manage{background:none;border:1px dashed var(--border);color:var(--text-sub);border-radius:10px;padding:10px 14px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.78rem;min-width:80px;transition:all .15s;}
+.btn-manage:hover{border-color:var(--accent);color:var(--accent);}
+
 @media(max-width:600px){
   .summary{gap:8px;}.summary-card{padding:12px 8px;}.summary-card .amount{font-size:.95rem;}
   .form-row{flex-direction:column;}.form-group{min-width:100%;}
@@ -254,6 +267,12 @@ tbody tr:hover{background:var(--card2);}
   <div class="card">
     <div class="card-title">💳 口座別残高（今月）</div>
     <div class="wallet-summary" id="walletSummary"></div>
+  </div>
+
+  <!-- Quick Templates -->
+  <div class="card">
+    <div class="card-title">⚡ クイック入力（タップで今日の記録に追加）</div>
+    <div class="quick-tpl-wrap" id="quickTplWrap"></div>
   </div>
 
   <!-- Entry Form -->
@@ -468,7 +487,7 @@ tbody tr:hover{background:var(--card2);}
 const EXPENSE_CATS=['食費','交通費','日用品','娯楽','光熱費','家賃','医療','通信費','教育','保険','その他'];
 const INCOME_CATS=['給料','副業','投資','その他'];
 const ALL_CATS=[...EXPENSE_CATS,...INCOME_CATS];
-const DEFAULT_WALLETS=['現金','銀行'];
+const DEFAULT_WALLETS=['現金','銀行','PayPay'];
 const CAT_COLORS={'食費':'#e07050','交通費':'#4a9ec2','日用品':'#8ebe50','娯楽':'#c070c0','光熱費':'#e0a030','家賃':'#607090','医療':'#50beb0','通信費':'#7090c0','教育':'#b08040','保険':'#60a0a0','給料':'#5a9e6f','副業':'#7abf7a','投資':'#40a0d0','その他':'#a0a0a0'};
 
 // Data
@@ -503,6 +522,19 @@ function init(){
   // Populate YBI month select
   const ybiM=document.getElementById('ybiMonth');
   for(let i=1;i<=12;i++)ybiM.innerHTML+=`<option value="${i}">${i}月</option>`;
+  // Seed default templates on first launch
+  if(templates.length===0){
+    const seed=[
+      {label:'コンビニ',type:'expense',category:'食費',amount:500,wallet:'現金',shop:''},
+      {label:'スーパー',type:'expense',category:'食費',amount:2000,wallet:'現金',shop:''},
+      {label:'ランチ',type:'expense',category:'食費',amount:800,wallet:'現金',shop:''},
+      {label:'カフェ',type:'expense',category:'娯楽',amount:500,wallet:'現金',shop:''},
+      {label:'電車代',type:'expense',category:'交通費',amount:300,wallet:'現金',shop:''},
+      {label:'ガソリン',type:'expense',category:'交通費',amount:5000,wallet:'PayPay',shop:''},
+      {label:'日用品',type:'expense',category:'日用品',amount:1500,wallet:'現金',shop:''}
+    ];
+    templates=seed.map((t,i)=>({id:Date.now()+i,...t}));saveAll();
+  }
   populateCategories();populateWallets();populateFilterMonths();render();
 }
 
@@ -600,7 +632,7 @@ function render(){
   document.getElementById('totalIncome').textContent=formatYen(inc);
   document.getElementById('totalExpense').textContent=formatYen(exp);
   document.getElementById('totalBalance').textContent=formatYen(inc-exp);
-  renderWallets(me);renderStats(me,exp);renderFV(me,exp);
+  renderWallets(me);renderQuickTemplates();renderStats(me,exp);renderFV(me,exp);
   renderBudgetProgress(me);renderYearlyBudget();renderYearlyItems();
   renderSavings(inc,exp);renderCompare(me);renderPie(me);renderHeatmap();renderTrend();renderHistory();populateFilterMonths();
 }
@@ -611,6 +643,21 @@ function renderWallets(me){
   const data={};wallets.forEach(w=>data[w]=0);
   me.forEach(e=>{const w=e.wallet||wallets[0];if(!data[w])data[w]=0;data[w]+=(e.type==='income'?1:-1)*e.amount;});
   wrap.innerHTML=wallets.map(w=>`<div class="wallet-pill"><div class="wname">${w}</div><div class="wamt">${formatYen(data[w]||0)}</div></div>`).join('');
+}
+
+// ─── Quick Templates ─────────────────
+function renderQuickTemplates(){
+  const wrap=document.getElementById('quickTplWrap');
+  if(templates.length===0){
+    wrap.innerHTML=`<div class="empty-msg" style="padding:12px;width:100%;">テンプレートがありません。<button class="btn-manage" onclick="openTemplateModal()" style="margin-left:8px;">＋ 追加</button></div>`;
+    return;
+  }
+  const chips=templates.map(t=>`<button class="quick-tpl-chip" onclick="useTemplate(${t.id})">
+    <span class="qtc-label">${t.label}</span>
+    <span class="qtc-meta">${t.category} / ${t.wallet||wallets[0]}</span>
+    <span class="qtc-amt ${t.type==='income'?'income-text':'expense-text'}">${t.type==='income'?'+':'-'}${formatYen(t.amount)}</span>
+  </button>`).join('');
+  wrap.innerHTML=chips+`<button class="btn-manage" onclick="openTemplateModal()">＋ 管理</button>`;
 }
 
 // ─── Stats ───────────────────────────
@@ -888,9 +935,9 @@ function addTemplate(){
   if(!label){toast('ラベルを入力してください');return;}if(!amount||amount<=0){toast('金額を入力してください');return;}
   templates.push({id:Date.now(),label,type:document.getElementById('tplType').value,category:document.getElementById('tplCategory').value,
     amount,wallet:document.getElementById('tplWallet').value,shop:document.getElementById('tplShop').value.trim()});
-  saveAll();renderTemplateList();toast('追加しました');document.getElementById('tplLabel').value='';document.getElementById('tplAmount').value='';document.getElementById('tplShop').value='';
+  saveAll();renderTemplateList();renderQuickTemplates();toast('追加しました');document.getElementById('tplLabel').value='';document.getElementById('tplAmount').value='';document.getElementById('tplShop').value='';
 }
-function deleteTemplate(id){templates=templates.filter(t=>t.id!==id);saveAll();renderTemplateList();toast('削除しました');}
+function deleteTemplate(id){templates=templates.filter(t=>t.id!==id);saveAll();renderTemplateList();renderQuickTemplates();toast('削除しました');}
 function useTemplate(id){
   const t=templates.find(x=>x.id===id);if(!t)return;
   entries.push({id:Date.now(),date:formatDate(new Date()),type:t.type,category:t.category,amount:t.amount,wallet:t.wallet||wallets[0],shop:t.shop||'',memo:t.label});
