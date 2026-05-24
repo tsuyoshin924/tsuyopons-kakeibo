@@ -240,6 +240,22 @@ tbody tr:hover{background:var(--card2);}
 .tax-hint{font-size:.72rem;color:var(--text-sub);margin-top:4px;min-height:1em;}
 /* Category hint */
 .cat-hint{font-size:.68rem;color:var(--text-sub);margin-top:4px;line-height:1.5;min-height:1.2em;}
+/* CSV mapping modal */
+.csv-preview-wrap{overflow-x:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:8px;}
+.csv-preview-table{width:100%;font-size:.72rem;border-collapse:collapse;min-width:400px;}
+.csv-preview-table th{background:var(--card2);padding:6px 8px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);}
+.csv-preview-table td{padding:5px 8px;border-bottom:1px solid var(--border);white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;}
+.map-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.map-row label{font-size:.75rem;color:var(--text-sub);width:90px;flex-shrink:0;}
+.map-row select,.map-row input{flex:1;font-family:'Noto Sans JP',sans-serif;font-size:.8rem;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card2);color:var(--text);outline:none;}
+.map-row select:focus,.map-row input:focus{border-color:var(--accent);}
+.map-section-title{font-size:.78rem;font-weight:700;color:var(--text-sub);margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+.preset-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.preset-chip{font-family:'Noto Sans JP',sans-serif;font-size:.75rem;padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:var(--card2);cursor:pointer;transition:all .2s;}
+.preset-chip:hover,.preset-chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+.preset-chip.builtin{border-color:var(--blue-light);color:var(--blue);}
+.preset-chip.builtin:hover{background:var(--blue-light);}
+
 /* Wallet management */
 .wallet-manage-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
 .wallet-manage-row .wm-name{flex:1;font-size:.88rem;}
@@ -278,6 +294,7 @@ tbody tr:hover{background:var(--card2);}
 
   <!-- Hidden file inputs -->
   <input type="file" id="csvInput" class="file-input" accept=".csv" onchange="importCSV(event)">
+  <input type="file" id="extCsvInput" class="file-input" accept=".csv" onchange="loadExtCsv(event)">
   <input type="file" id="restoreInput" class="file-input" accept=".json" onchange="restoreData(event)">
 
   <!-- Drawer overlay -->
@@ -297,7 +314,8 @@ tbody tr:hover{background:var(--card2);}
       <button class="drawer-item" onclick="dc(openWalletModal)"><span class="di-icon">🏧</span>口座管理</button>
       <div class="drawer-divider"></div>
       <button class="drawer-item" onclick="dc(exportCSV)"><span class="di-icon">📤</span>CSV出力</button>
-      <button class="drawer-item" onclick="dc(()=>document.getElementById('csvInput').click())"><span class="di-icon">📥</span>CSV読込</button>
+      <button class="drawer-item" onclick="dc(()=>document.getElementById('csvInput').click())"><span class="di-icon">📥</span>CSV読込（本アプリ形式）</button>
+      <button class="drawer-item" onclick="dc(()=>document.getElementById('extCsvInput').click())"><span class="di-icon">🔄</span>外部CSV読込</button>
       <button class="drawer-item" onclick="dc(backupData)"><span class="di-icon">💾</span>バックアップ</button>
       <button class="drawer-item" onclick="dc(()=>document.getElementById('restoreInput').click())"><span class="di-icon">📂</span>復元</button>
       <div class="drawer-divider"></div>
@@ -651,6 +669,63 @@ tbody tr:hover{background:var(--card2);}
   </div>
   <div id="ybiList"></div>
   <div class="modal-actions"><button class="btn-cancel" onclick="closeYbiModal()">閉じる</button></div>
+</div></div>
+
+<!-- External CSV Mapping Modal -->
+<div class="modal-overlay" id="extCsvModal"><div class="modal" style="max-width:600px;">
+  <h2>🔄 外部CSV読込</h2>
+
+  <div class="map-section-title">📋 プリセット</div>
+  <div class="preset-chips" id="presetChips"></div>
+
+  <div class="map-section-title">👁 プレビュー（先頭3行）</div>
+  <div class="csv-preview-wrap"><table class="csv-preview-table" id="csvPreviewTable"></table></div>
+
+  <div class="map-section-title">🔗 列マッピング</div>
+  <div class="map-row"><label>日付列</label><select id="mp-date"></select></div>
+  <div class="map-row"><label>日付形式</label>
+    <select id="mp-datefmt">
+      <option value="auto">自動判定</option>
+      <option value="YYYY/MM/DD">YYYY/MM/DD</option>
+      <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+      <option value="YYYY/MM/DD HH:mm:ss">YYYY/MM/DD HH:mm:ss</option>
+      <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+    </select>
+  </div>
+  <div class="map-row"><label>金額の形式</label>
+    <select id="mp-amtmode" onchange="updateAmtMode()">
+      <option value="single">1列（プラス＝収入 / マイナス＝支出）</option>
+      <option value="split">出金列・入金列が別々</option>
+    </select>
+  </div>
+  <div id="mp-amt-single"><div class="map-row"><label>金額列</label><select id="mp-amt"></select></div></div>
+  <div id="mp-amt-split" style="display:none;">
+    <div class="map-row"><label>出金列</label><select id="mp-out"></select></div>
+    <div class="map-row"><label>入金列</label><select id="mp-in"></select></div>
+  </div>
+  <div class="map-row"><label>店舗列</label><select id="mp-shop"></select></div>
+  <div class="map-row"><label>メモ列</label><select id="mp-memo"></select></div>
+  <div class="map-row"><label>種類列</label><select id="mp-type"><option value="">(固定値を使用)</option></select></div>
+
+  <div class="map-section-title">📌 固定値（列が存在しない項目）</div>
+  <div class="map-row"><label>口座</label><select id="mp-wallet"></select></div>
+  <div class="map-row"><label>デフォルト<br>カテゴリ</label>
+    <select id="mp-category">
+      <option>食費</option><option>交通費</option><option>日用品</option><option>娯楽</option>
+      <option>光熱費</option><option>家賃</option><option>医療</option><option>通信費</option>
+      <option>教育</option><option>保険</option><option>その他</option>
+    </select>
+  </div>
+  <div class="map-row"><label>除外ワード</label><input type="text" id="mp-exclude" placeholder="例: チャージ,ポイント (カンマ区切り)"></div>
+
+  <div class="map-section-title">💾 プリセット保存</div>
+  <div class="map-row"><label>プリセット名</label><input type="text" id="mp-preset-name" placeholder="例: PayPay"></div>
+  <div style="margin-bottom:8px;"><button class="btn-save" style="padding:6px 16px;font-size:.8rem;" onclick="saveExtPreset()">このマッピングを保存</button></div>
+
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeExtCsvModal()">キャンセル</button>
+    <button class="btn-save" id="mp-import-btn" onclick="execExtImport()">📥 取り込む</button>
+  </div>
 </div></div>
 
 <!-- Wallet Management Modal -->
@@ -1315,6 +1390,221 @@ function restoreData(event){
 // Close modals
 document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
 document.getElementById('confirmOverlay').addEventListener('click',e=>{if(e.target.id==='confirmOverlay')cancelDelete();});
+
+// ─── External CSV Import ─────────────
+const BUILTIN_PRESETS=[
+  {name:'PayPay', builtin:true,
+   datefmt:'YYYY/MM/DD HH:mm:ss', amtmode:'split',
+   date:'取引日', out:'出金金額（円）', inp:'入金金額（円）',
+   shop:'取引先', memo:'取引内容', type:'', wallet:'PayPay', category:'食費',
+   exclude:'チャージ'},
+  {name:'三井住友銀行', builtin:true,
+   datefmt:'YYYY/MM/DD', amtmode:'split',
+   date:'年月日', out:'お引き出し', inp:'お預け入れ',
+   shop:'摘要', memo:'', type:'', wallet:'銀行', category:'その他',
+   exclude:''},
+];
+let extPresets=load('kb_extpresets',[]);
+let extCsvHeaders=[];
+let extCsvRows=[];
+
+function loadExtCsv(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const text=e.target.result;
+    const lines=text.split('\n').filter(l=>l.trim());
+    if(lines.length<2){toast('データがありません');return;}
+    // Detect BOM and parse
+    const clean=lines[0].replace(/^\uFEFF/,'');
+    extCsvHeaders=clean.split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+    extCsvRows=lines.slice(1,4).map(l=>l.split(',').map(c=>c.trim().replace(/^"|"$/g,'')));
+    openExtCsvModal();
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+function openExtCsvModal(){
+  // Build column options
+  const noneOpt='<option value="">(なし)</option>';
+  const colOpts=noneOpt+extCsvHeaders.map(h=>`<option value="${h}">${h}</option>`).join('');
+  ['mp-date','mp-amt','mp-out','mp-in','mp-shop','mp-memo','mp-type'].forEach(id=>{
+    document.getElementById(id).innerHTML=colOpts;
+  });
+  // Wallet options
+  document.getElementById('mp-wallet').innerHTML=wallets.map(w=>`<option value="${w}">${w}</option>`).join('');
+  // Preview table
+  const thead='<tr>'+extCsvHeaders.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+  const tbody=extCsvRows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+  document.getElementById('csvPreviewTable').innerHTML=`<thead>${thead}</thead><tbody>${tbody}</tbody>`;
+  // Preset chips
+  renderPresetChips();
+  document.getElementById('extCsvModal').classList.add('open');
+}
+function closeExtCsvModal(){document.getElementById('extCsvModal').classList.remove('open');}
+
+function renderPresetChips(){
+  const all=[...BUILTIN_PRESETS,...extPresets];
+  document.getElementById('presetChips').innerHTML=
+    all.map((p,i)=>`<div class="preset-chip${p.builtin?' builtin':''}" onclick="applyPreset(${i})">${p.name}${!p.builtin?` <span onclick="event.stopPropagation();deletePreset(${i-BUILTIN_PRESETS.length})" style="margin-left:4px;opacity:.5;font-size:.7rem;">✕</span>`:''}</div>`).join('')
+    ||'<span style="font-size:.75rem;color:var(--text-sub);">保存済みプリセットなし</span>';
+}
+
+function applyPreset(i){
+  const all=[...BUILTIN_PRESETS,...extPresets];
+  const p=all[i];if(!p)return;
+  const set=(id,v)=>{const el=document.getElementById(id);if(el&&v!==undefined){el.value=v;}};
+  set('mp-datefmt',p.datefmt);set('mp-amtmode',p.amtmode);updateAmtMode();
+  set('mp-date',p.date);set('mp-out',p.out);set('mp-in',p.inp);
+  set('mp-amt',p.amt||'');set('mp-shop',p.shop);set('mp-memo',p.memo);
+  set('mp-type',p.type||'');set('mp-wallet',p.wallet);set('mp-category',p.category);
+  set('mp-exclude',p.exclude||'');set('mp-preset-name',p.name);
+  document.querySelectorAll('.preset-chip').forEach((el,j)=>el.classList.toggle('active',j===i));
+}
+
+function saveExtPreset(){
+  const name=document.getElementById('mp-preset-name').value.trim();
+  if(!name){toast('プリセット名を入力してください');return;}
+  const p={name,builtin:false,
+    datefmt:document.getElementById('mp-datefmt').value,
+    amtmode:document.getElementById('mp-amtmode').value,
+    date:document.getElementById('mp-date').value,
+    out:document.getElementById('mp-out').value,
+    inp:document.getElementById('mp-in').value,
+    amt:document.getElementById('mp-amt').value,
+    shop:document.getElementById('mp-shop').value,
+    memo:document.getElementById('mp-memo').value,
+    type:document.getElementById('mp-type').value,
+    wallet:document.getElementById('mp-wallet').value,
+    category:document.getElementById('mp-category').value,
+    exclude:document.getElementById('mp-exclude').value,
+  };
+  const idx=extPresets.findIndex(x=>x.name===name);
+  if(idx>=0)extPresets[idx]=p;else extPresets.push(p);
+  localStorage.setItem('kb_extpresets',JSON.stringify(extPresets));
+  renderPresetChips();toast(`「${name}」を保存しました`);
+}
+function deletePreset(i){extPresets.splice(i,1);localStorage.setItem('kb_extpresets',JSON.stringify(extPresets));renderPresetChips();toast('削除しました');}
+
+function updateAmtMode(){
+  const split=document.getElementById('mp-amtmode').value==='split';
+  document.getElementById('mp-amt-single').style.display=split?'none':'';
+  document.getElementById('mp-amt-split').style.display=split?'':'none';
+}
+
+function parseExtDate(raw,fmt){
+  if(!raw)return null;
+  raw=raw.trim();
+  let y,m,d;
+  if(fmt==='YYYY/MM/DD'||fmt==='YYYY/MM/DD HH:mm:ss'||fmt==='auto'){
+    const match=raw.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if(match){y=match[1];m=match[2].padStart(2,'0');d=match[3].padStart(2,'0');}
+  }else if(fmt==='MM/DD/YYYY'){
+    const match=raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(match){y=match[3];m=match[1].padStart(2,'0');d=match[2].padStart(2,'0');}
+  }
+  return(y&&m&&d)?`${y}-${m}-${d}`:null;
+}
+function parseAmt(raw){
+  if(!raw||raw==='-')return 0;
+  return parseInt(raw.replace(/[,，\s¥￥]/g,''))||0;
+}
+
+function execExtImport(){
+  // Read file again - need full data
+  const fileInput=document.getElementById('extCsvInput');
+  // We stored rows in extCsvRows but only first 3; reload full file
+  const file2=document.getElementById('extCsvInput');
+  // Read from original text stored
+  _doExtImport();
+}
+
+let _extFullText='';
+function loadExtCsv(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    _extFullText=e.target.result;
+    const lines=_extFullText.split('\n').filter(l=>l.trim());
+    if(lines.length<2){toast('データがありません');return;}
+    const clean=lines[0].replace(/^\uFEFF/,'');
+    extCsvHeaders=clean.split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+    extCsvRows=lines.slice(1,4).map(l=>parseCsvLine(l));
+    openExtCsvModal();
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+function parseCsvLine(line){
+  const result=[];let cur='';let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){result.push(cur.trim());cur='';}
+    else cur+=c;
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function _doExtImport(){
+  const lines=_extFullText.split('\n').filter(l=>l.trim());
+  const headers=lines[0].replace(/^\uFEFF/,'').split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+  const hi=name=>headers.indexOf(name);
+
+  const datefmt=document.getElementById('mp-datefmt').value;
+  const amtmode=document.getElementById('mp-amtmode').value;
+  const datecol=document.getElementById('mp-date').value;
+  const outcol=document.getElementById('mp-out').value;
+  const incol=document.getElementById('mp-in').value;
+  const amtcol=document.getElementById('mp-amt').value;
+  const shopcol=document.getElementById('mp-shop').value;
+  const memocol=document.getElementById('mp-memo').value;
+  const wallet=document.getElementById('mp-wallet').value;
+  const defcat=document.getElementById('mp-category').value;
+  const excludeRaw=document.getElementById('mp-exclude').value;
+  const excludes=excludeRaw.split(',').map(x=>x.trim()).filter(Boolean);
+
+  if(!datecol){toast('日付列を選択してください');return;}
+
+  let added=0,skipped=0;
+  for(let i=1;i<lines.length;i++){
+    const cols=parseCsvLine(lines[i]);
+    const get=name=>{const idx=hi(name);return idx>=0&&idx<cols.length?cols[idx].replace(/^"|"$/g,'').trim():'';};
+
+    const dateRaw=get(datecol);
+    const date=parseExtDate(dateRaw,datefmt);
+    if(!date){skipped++;continue;}
+
+    const shopVal=shopcol?get(shopcol):'';
+    const memoVal=memocol?get(memocol):'';
+
+    // Exclude check
+    const combined=(shopVal+' '+memoVal).toLowerCase();
+    if(excludes.some(ex=>ex&&combined.includes(ex.toLowerCase()))){skipped++;continue;}
+
+    let amount=0,type='expense';
+    if(amtmode==='split'){
+      const outAmt=parseAmt(get(outcol));
+      const inAmt=parseAmt(get(incol));
+      if(outAmt>0){amount=outAmt;type='expense';}
+      else if(inAmt>0){amount=inAmt;type='income';}
+      else{skipped++;continue;}
+    }else{
+      const raw=parseAmt(get(amtcol));
+      if(raw===0){skipped++;continue;}
+      if(raw<0){amount=-raw;type='expense';}
+      else{amount=raw;type='income';}
+    }
+
+    entries.push({id:Date.now()+i,date,type,category:defcat,amount,wallet,shop:shopVal,memo:memoVal});
+    added++;
+  }
+  entries.sort((a,b)=>b.date.localeCompare(a.date));
+  saveAll();closeExtCsvModal();toast(`${added}件取り込みました（${skipped}件スキップ）`);render();
+}
 
 // ─── Collapsible cards ───────────────
 let collapsedCards=load('kb_collapsed',{});
