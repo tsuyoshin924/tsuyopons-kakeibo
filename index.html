@@ -837,7 +837,7 @@ function render(){
   const ym=viewYear+'-'+String(viewMonth+1).padStart(2,'0');
   document.getElementById('currentMonth').textContent=`${viewYear}年${viewMonth+1}月`;
   const me=entries.filter(e=>e.date.startsWith(ym));
-  const meNormal=me.filter(e=>!e.isTransfer);
+  const meNormal=me.filter(e=>!e.isTransfer&&e.category!=='振替');
   const inc=meNormal.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
   const exp=meNormal.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
   document.getElementById('totalIncome').textContent=formatYen(inc);
@@ -853,10 +853,13 @@ function renderWallets(me){
   const wrap=document.getElementById('walletSummary');
   const data={};wallets.forEach(w=>data[w]=0);
   me.forEach(e=>{
+    // アプリ内振替：振替元から引き、振替先に足す
     if(e.isTransfer){
-      // Transfer: subtract from "from" wallet, add to "to" wallet
       if(e.transferFrom&&data[e.transferFrom]!==undefined)data[e.transferFrom]-=e.amount;
       if(e.transferTo&&data[e.transferTo]!==undefined)data[e.transferTo]+=e.amount;
+    // CSV等カテゴリ「振替」：先が不明なためスキップ
+    } else if(e.category==='振替'){
+      return;
     } else {
       const w=e.wallet||wallets[0];if(data[w]===undefined)data[w]=0;
       data[w]+=(e.type==='income'?1:-1)*e.amount;
@@ -891,7 +894,7 @@ function renderStats(me,exp){
   const today=new Date();
   const elapsed=(viewYear===today.getFullYear()&&viewMonth===today.getMonth())?today.getDate():daysInMonth;
   const avg=elapsed>0?Math.round(exp/elapsed):0;
-  const daily={};me.filter(e=>e.type==='expense').forEach(e=>{const d=e.date;daily[d]=(daily[d]||0)+e.amount;});
+  const daily={};me.filter(e=>e.type==='expense'&&!e.isTransfer&&e.category!=='振替').forEach(e=>{const d=e.date;daily[d]=(daily[d]||0)+e.amount;});
   const dayEntries=Object.entries(daily).sort((a,b)=>b[1]-a[1]);
   const maxDay=dayEntries.length>0?dayEntries[0]:null;
   const txCount=me.length;
@@ -1012,7 +1015,7 @@ function renderCompare(me){
 // ─── Pie ─────────────────────────────
 function renderPie(me){
   const wrap=document.getElementById('pieChart');const data={};
-  me.filter(e=>e.type==='expense').forEach(e=>{data[e.category]=(data[e.category]||0)+e.amount;});
+  me.filter(e=>e.type==='expense'&&!e.isTransfer&&e.category!=='振替').forEach(e=>{data[e.category]=(data[e.category]||0)+e.amount;});
   const items=Object.entries(data).sort((a,b)=>b[1]-a[1]);const total=items.reduce((s,i)=>s+i[1],0);
   if(total===0){wrap.innerHTML='<div class="empty-msg">支出データがありません</div>';return;}
   let angle=0,paths='';
