@@ -240,6 +240,14 @@ tbody tr:hover{background:var(--card2);}
 .tax-hint{font-size:.72rem;color:var(--text-sub);margin-top:4px;min-height:1em;}
 /* Category hint */
 .cat-hint{font-size:.68rem;color:var(--text-sub);margin-top:4px;line-height:1.5;min-height:1.2em;}
+/* Duplicate check */
+.dup-group{background:var(--red-light);border-radius:10px;padding:12px;margin-bottom:12px;}
+.dup-group-header{font-size:.75rem;font-weight:700;color:var(--red);margin-bottom:8px;}
+.dup-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.05);font-size:.78rem;}
+.dup-item:last-child{border-bottom:none;}
+.dup-item input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--red);}
+.dup-badge{background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;font-size:.65rem;font-weight:700;margin-left:4px;}
+
 /* CSV mapping modal */
 .csv-preview-wrap{overflow-x:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:8px;}
 .csv-preview-table{width:100%;font-size:.72rem;border-collapse:collapse;min-width:400px;}
@@ -313,7 +321,7 @@ tbody tr:hover{background:var(--card2);}
       <button class="drawer-item" onclick="dc(openTransferModal)"><span class="di-icon">💸</span>口座振替</button>
       <button class="drawer-item" onclick="dc(openWalletModal)"><span class="di-icon">🏧</span>口座管理</button>
       <div class="drawer-divider"></div>
-      <button class="drawer-item" onclick="dc(exportCSV)"><span class="di-icon">📤</span>CSV出力</button>
+      <button class="drawer-item" onclick="dc(openExportModal)"><span class="di-icon">📤</span>CSV出力</button>
       <button class="drawer-item" onclick="dc(()=>document.getElementById('csvInput').click())"><span class="di-icon">📥</span>CSV読込（本アプリ形式）</button>
       <button class="drawer-item" onclick="dc(()=>document.getElementById('extCsvInput').click())"><span class="di-icon">🔄</span>外部CSV読込</button>
       <button class="drawer-item" onclick="dc(backupData)"><span class="di-icon">💾</span>バックアップ</button>
@@ -433,7 +441,10 @@ tbody tr:hover{background:var(--card2);}
   <div class="section-label">📋 履歴</div>
 
   <div class="card">
-    <div class="card-title collapsible" onclick="toggleCard('c-history')">📋 履歴</div>
+    <div class="card-title collapsible" onclick="toggleCard('c-history')" style="justify-content:space-between;">
+      <span>📋 履歴</span>
+      <button class="btn-edit" style="font-size:.7rem;padding:4px 10px;" onclick="event.stopPropagation();openDupModal()">🔍 重複チェック</button>
+    </div>
     <div class="card-body" id="c-history">
     <div class="filters">
       <select id="filterMonth" onchange="render()"></select>
@@ -725,6 +736,42 @@ tbody tr:hover{background:var(--card2);}
   <div class="modal-actions">
     <button class="btn-cancel" onclick="closeExtCsvModal()">キャンセル</button>
     <button class="btn-save" id="mp-import-btn" onclick="execExtImport()">📥 取り込む</button>
+  </div>
+</div></div>
+
+<!-- CSV Export Modal -->
+<div class="modal-overlay" id="exportModal"><div class="modal">
+  <h2>📤 CSV出力</h2>
+  <div class="map-section-title">📅 期間</div>
+  <div class="map-row"><label>開始日</label><input type="date" id="ex-from" oninput="updateExportPreview()"></div>
+  <div class="map-row"><label>終了日</label><input type="date" id="ex-to" oninput="updateExportPreview()"></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+    <button class="preset-chip" onclick="setExportRange('thisMonth')">今月</button>
+    <button class="preset-chip" onclick="setExportRange('lastMonth')">先月</button>
+    <button class="preset-chip" onclick="setExportRange('thisYear')">今年</button>
+    <button class="preset-chip" onclick="setExportRange('all')">全期間</button>
+  </div>
+  <div class="map-section-title">📂 種類</div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+    <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;cursor:pointer;"><input type="checkbox" id="ex-expense" checked onchange="updateExportPreview()"> 支出</label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;cursor:pointer;"><input type="checkbox" id="ex-income" checked onchange="updateExportPreview()"> 収入</label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;cursor:pointer;"><input type="checkbox" id="ex-transfer" checked onchange="updateExportPreview()"> 振替</label>
+  </div>
+  <div id="ex-preview" style="font-size:.78rem;color:var(--text-sub);margin-bottom:4px;"></div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="document.getElementById('exportModal').classList.remove('open')">キャンセル</button>
+    <button class="btn-save" onclick="execExport()">📥 出力する</button>
+  </div>
+</div></div>
+
+<!-- Duplicate Check Modal -->
+<div class="modal-overlay" id="dupModal"><div class="modal" style="max-width:600px;">
+  <h2>🔍 重複チェック</h2>
+  <p style="font-size:.8rem;color:var(--text-sub);margin-bottom:14px;">日付・種類・金額・カテゴリ・店舗がすべて一致する記録を検出します</p>
+  <div id="dupList"></div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="document.getElementById('dupModal').classList.remove('open')">閉じる</button>
+    <button class="btn-save" style="background:var(--red);" id="dupDeleteBtn" onclick="deleteDups()" style="display:none;">チェックした重複を削除</button>
   </div>
 </div></div>
 
@@ -1341,31 +1388,93 @@ function renderYbiList(){
 }
 
 // ─── CSV ─────────────────────────────
-function exportCSV(){
+// ─── CSV Export ──────────────────────
+function openExportModal(){
+  const now=new Date();
+  const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  // Default: current month
+  const days=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  document.getElementById('ex-from').value=ym+'-01';
+  document.getElementById('ex-to').value=ym+'-'+String(days).padStart(2,'0');
+  updateExportPreview();
+  document.getElementById('exportModal').classList.add('open');
+}
+function setExportRange(range){
+  const now=new Date();
+  const y=now.getFullYear(),m=now.getMonth();
+  let from,to;
+  if(range==='thisMonth'){
+    from=`${y}-${String(m+1).padStart(2,'0')}-01`;
+    to=`${y}-${String(m+1).padStart(2,'0')}-${new Date(y,m+1,0).getDate()}`;
+  }else if(range==='lastMonth'){
+    const lm=m===0?11:m-1,ly=m===0?y-1:y;
+    from=`${ly}-${String(lm+1).padStart(2,'0')}-01`;
+    to=`${ly}-${String(lm+1).padStart(2,'0')}-${new Date(ly,lm+1,0).getDate()}`;
+  }else if(range==='thisYear'){
+    from=`${y}-01-01`;to=`${y}-12-31`;
+  }else{
+    const dates=entries.map(e=>e.date).sort();
+    from=dates[0]||`${y}-01-01`;to=dates[dates.length-1]||`${y}-12-31`;
+  }
+  document.getElementById('ex-from').value=from;
+  document.getElementById('ex-to').value=to;
+  updateExportPreview();
+}
+function updateExportPreview(){
+  const from=document.getElementById('ex-from').value;
+  const to=document.getElementById('ex-to').value;
+  const exp=document.getElementById('ex-expense').checked;
+  const inc=document.getElementById('ex-income').checked;
+  const tr=document.getElementById('ex-transfer').checked;
+  const count=entries.filter(e=>filterForExport(e,from,to,exp,inc,tr)).length;
+  document.getElementById('ex-preview').textContent=`対象: ${count}件`;
+}
+function filterForExport(e,from,to,exp,inc,tr){
+  if(from&&e.date<from)return false;
+  if(to&&e.date>to)return false;
+  const isT=e.isTransfer||e.type==='transfer'||e.category==='振替';
+  if(isT)return tr;
+  if(e.type==='income')return inc;
+  if(e.type==='expense')return exp;
+  return true;
+}
+function execExport(){
+  const from=document.getElementById('ex-from').value;
+  const to=document.getElementById('ex-to').value;
+  const exp=document.getElementById('ex-expense').checked;
+  const inc=document.getElementById('ex-income').checked;
+  const tr=document.getElementById('ex-transfer').checked;
+  if(!exp&&!inc&&!tr){toast('種類を1つ以上選択してください');return;}
+  const target=entries.filter(e=>filterForExport(e,from,to,exp,inc,tr));
+  if(target.length===0){toast('該当データがありません');return;}
   let csv='\uFEFF日付,種類,カテゴリ,口座,店舗,メモ,金額\n';
-  entries.forEach(e=>{
+  target.forEach(e=>{
     const isT=e.isTransfer||e.type==='transfer';
     if(isT&&e.transferFrom&&e.transferTo){
-      // アプリ内振替：振替元・振替先を2行で出力
       csv+=`${e.date},支出,振替,${e.transferFrom},,,${e.amount}\n`;
       csv+=`${e.date},収入,振替,${e.transferTo},,,${e.amount}\n`;
     }else if(e.category==='振替'){
-      // CSV読込の振替（振替先不明）：そのまま1行
       csv+=`${e.date},支出,振替,${e.wallet||''},,,${e.amount}\n`;
     }else{
       csv+=`${e.date},${e.type==='income'?'収入':'支出'},${e.category},${e.wallet||''},${e.shop||''},${e.memo||''},${e.amount}\n`;
     }
   });
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);a.download=`kakeibo_${formatDate(new Date())}.csv`;a.click();toast('CSVを出力しました');
+  const fname=`kakeibo_${from||'all'}_${to||'all'}.csv`;
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+  document.getElementById('exportModal').classList.remove('open');
+  toast(`${target.length}件を出力しました`);
 }
 function importCSV(event){
   const file=event.target.files[0];if(!file)return;const reader=new FileReader();
-  reader.onload=function(e){const lines=e.target.result.split('\n').filter(l=>l.trim());let added=0;
+  reader.onload=function(e){const lines=e.target.result.split('\n').filter(l=>l.trim());let added=0,dupes=0;
     for(let i=1;i<lines.length;i++){const c=lines[i].split(',');if(c.length<6)continue;
       const type=c[1].trim()==='収入'?'income':'expense';
-      entries.push({id:Date.now()+i,date:c[0].trim(),type,category:c[2].trim(),wallet:c.length>=7?c[3].trim():'',shop:c.length>=7?c[4].trim():c[3].trim(),memo:c.length>=7?c[5].trim():c[4].trim(),amount:parseInt(c[c.length-1])||0});added++;}
-    entries.sort((a,b)=>b.date.localeCompare(a.date));saveAll();toast(`${added}件読み込みました`);render();};
+      const entry={id:Date.now()+i,date:c[0].trim(),type,category:c[2].trim(),wallet:c.length>=7?c[3].trim():'',shop:c.length>=7?c[4].trim():c[3].trim(),memo:c.length>=7?c[5].trim():c[4].trim(),amount:parseInt(c[c.length-1])||0};
+      if(isDuplicate(entry)){dupes++;continue;}
+      entries.push(entry);added++;}
+    entries.sort((a,b)=>b.date.localeCompare(a.date));saveAll();
+    toast(`${added}件読み込みました${dupes>0?' (重複'+dupes+'件スキップ)':''}`);render();};
   reader.readAsText(file);event.target.value='';
 }
 
@@ -1390,6 +1499,67 @@ function restoreData(event){
 // Close modals
 document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
 document.getElementById('confirmOverlay').addEventListener('click',e=>{if(e.target.id==='confirmOverlay')cancelDelete();});
+
+// ─── Duplicate Detection ─────────────
+function dupKey(e){
+  return[e.date,e.type,e.amount,e.category,e.shop||'',e.memo||''].join('|');
+}
+function findDuplicateGroups(){
+  const map={};
+  entries.forEach(e=>{
+    if(e.isTransfer||e.type==='transfer')return;
+    const k=dupKey(e);
+    if(!map[k])map[k]=[];
+    map[k].push(e);
+  });
+  return Object.values(map).filter(g=>g.length>1);
+}
+
+function openDupModal(){
+  const groups=findDuplicateGroups();
+  const wrap=document.getElementById('dupList');
+  const btn=document.getElementById('dupDeleteBtn');
+  if(groups.length===0){
+    wrap.innerHTML='<div class="empty-msg">重複データはありません ✅</div>';
+    btn.style.display='none';
+    document.getElementById('dupModal').classList.add('open');
+    return;
+  }
+  btn.style.display='';
+  wrap.innerHTML=groups.map((g,gi)=>{
+    const items=g.map((e,ei)=>{
+      const checked=ei>0?'checked':''; // 先頭以外をデフォルトチェック
+      return `<div class="dup-item">
+        <input type="checkbox" class="dup-cb" data-id="${e.id}" ${checked}>
+        <span>${e.date}</span>
+        <span>${e.type==='income'?'収入':'支出'}</span>
+        <span>${e.category}</span>
+        <span>${e.shop||'-'}</span>
+        <span>${e.memo||'-'}</span>
+        <span style="font-weight:700;color:var(--red)">¥${e.amount.toLocaleString()}</span>
+        ${ei===0?`<span class="dup-badge">元データ</span>`:''}
+      </div>`;
+    }).join('');
+    return `<div class="dup-group">
+      <div class="dup-group-header">重複グループ ${gi+1}（${g.length}件）<span style="font-weight:400;color:var(--text-sub)"> ※チェックした行を削除します</span></div>
+      ${items}
+    </div>`;
+  }).join('');
+  document.getElementById('dupModal').classList.add('open');
+}
+
+function deleteDups(){
+  const ids=new Set([...document.querySelectorAll('.dup-cb:checked')].map(cb=>parseInt(cb.dataset.id)));
+  if(ids.size===0){toast('削除する項目を選択してください');return;}
+  entries=entries.filter(e=>!ids.has(e.id));
+  saveAll();document.getElementById('dupModal').classList.remove('open');toast(`${ids.size}件の重複を削除しました`);render();
+}
+
+// Duplicate key check for imports
+function isDuplicate(e){
+  const k=dupKey(e);
+  return entries.some(ex=>dupKey(ex)===k);
+}
 
 // ─── External CSV Import ─────────────
 const BUILTIN_PRESETS=[
@@ -1599,11 +1769,13 @@ function _doExtImport(){
       else{amount=raw;type='income';}
     }
 
-    entries.push({id:Date.now()+i,date,type,category:defcat,amount,wallet,shop:shopVal,memo:memoVal});
+    const newEntry={id:Date.now()+i,date,type,category:defcat,amount,wallet,shop:shopVal,memo:memoVal};
+    if(isDuplicate(newEntry)){skipped++;continue;}
+    entries.push(newEntry);
     added++;
   }
   entries.sort((a,b)=>b.date.localeCompare(a.date));
-  saveAll();closeExtCsvModal();toast(`${added}件取り込みました（${skipped}件スキップ）`);render();
+  saveAll();closeExtCsvModal();toast(`${added}件取り込みました（スキップ ${skipped}件 / うち重複含む）`);render();
 }
 
 // ─── Collapsible cards ───────────────
