@@ -238,6 +238,13 @@ tbody tr:hover{background:var(--card2);}
 
 /* Tax */
 .tax-hint{font-size:.72rem;color:var(--text-sub);margin-top:4px;min-height:1em;}
+/* Category hint */
+.cat-hint{font-size:.68rem;color:var(--text-sub);margin-top:4px;line-height:1.5;min-height:1.2em;}
+/* Wallet management */
+.wallet-manage-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
+.wallet-manage-row .wm-name{flex:1;font-size:.88rem;}
+.wallet-manage-row input{flex:1;font-family:'Noto Sans JP',sans-serif;font-size:.85rem;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card2);color:var(--text);outline:none;}
+.wallet-manage-row input:focus{border-color:var(--accent);}
 
 /* Quick template picker modal */
 .qtpl-grid{display:flex;flex-wrap:wrap;gap:10px;padding:4px 0;}
@@ -287,6 +294,7 @@ tbody tr:hover{background:var(--card2);}
       <button class="drawer-item" onclick="dc(openSavingsModal)"><span class="di-icon">🐷</span>貯金目標</button>
       <button class="drawer-item" onclick="dc(openYbiModal)"><span class="di-icon">📅</span>年間予算項目</button>
       <button class="drawer-item" onclick="dc(openTransferModal)"><span class="di-icon">💸</span>口座振替</button>
+      <button class="drawer-item" onclick="dc(openWalletModal)"><span class="di-icon">🏧</span>口座管理</button>
       <div class="drawer-divider"></div>
       <button class="drawer-item" onclick="dc(exportCSV)"><span class="di-icon">📤</span>CSV出力</button>
       <button class="drawer-item" onclick="dc(()=>document.getElementById('csvInput').click())"><span class="di-icon">📥</span>CSV読込</button>
@@ -324,7 +332,7 @@ tbody tr:hover{background:var(--card2);}
         </div>
       </div>
       <div class="form-group"><label>日付</label><input type="date" id="entryDate"></div>
-      <div class="form-group"><label>カテゴリ</label><select id="entryCategory"></select></div>
+      <div class="form-group"><label>カテゴリ</label><select id="entryCategory" onchange="updateCatHint()"></select><div class="cat-hint" id="catHint"></div></div>
       <div class="form-group"><label>金額（税抜）</label><input type="number" id="entryAmount" placeholder="0" min="0" oninput="updateTaxHint()"><div class="tax-hint" id="taxHint"></div></div>
       <div class="form-group"><label>消費税</label>
         <select id="entryTax" onchange="updateTaxHint()">
@@ -645,6 +653,19 @@ tbody tr:hover{background:var(--card2);}
   <div class="modal-actions"><button class="btn-cancel" onclick="closeYbiModal()">閉じる</button></div>
 </div></div>
 
+<!-- Wallet Management Modal -->
+<div class="modal-overlay" id="walletModal"><div class="modal">
+  <h2>🏧 口座管理</h2>
+  <div id="walletList" style="margin-bottom:16px;"></div>
+  <div style="display:flex;gap:8px;margin-top:8px;">
+    <input type="text" id="newWalletName" placeholder="新しい口座名" style="flex:1;font-family:'Noto Sans JP',sans-serif;font-size:.85rem;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card2);color:var(--text);outline:none;">
+    <button class="btn-add" onclick="addWallet()">追加</button>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeWalletModal()">閉じる</button>
+  </div>
+</div></div>
+
 <!-- Transfer Modal -->
 <div class="modal-overlay" id="transferModal"><div class="modal">
   <h2>💸 口座振替</h2>
@@ -743,6 +764,7 @@ function populateCategories(){
   const sel=document.getElementById('entryCategory');
   const cats=currentType==='expense'?EXPENSE_CATS:INCOME_CATS;
   sel.innerHTML=cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  updateCatHint();
 }
 function populateWallets(){
   ['entryWallet','editWallet','tplWallet'].forEach(id=>{
@@ -1303,6 +1325,90 @@ function applyCollapsedState(){
     const title=body.previousElementSibling;
     if(title)title.classList.add('collapsed');
   });
+}
+
+// ─── Category hints ──────────────────
+const CAT_HINTS={
+  '食費':      'スーパー・コンビニ・外食・カフェ・飲料・お菓子など',
+  '交通費':    '電車・バス・タクシー・定期券・ガソリン・駐車場など',
+  '日用品':    '洗剤・シャンプー・トイレットペーパー・ティッシュ・電池など',
+  '娯楽':      '映画・ゲーム・趣味・書籍・音楽・飲み会・タバコなど',
+  '光熱費':    '電気・ガス・水道・灯油など',
+  '家賃':      '家賃・管理費・駐車場代・更新料など',
+  '医療':      '病院・薬局・歯科・健康診断・サプリなど',
+  '通信費':    '携帯・インターネット・サブスク（Netflix等）など',
+  '教育':      '学費・塾・参考書・セミナー・資格など',
+  '保険':      '生命保険・医療保険・火災保険・自動車保険など',
+  '給料':      '月給・ボーナス・残業代など',
+  '副業':      'フリーランス・副業収入・せどりなど',
+  '投資':      '株配当・投資信託分配金・不動産収入など',
+  'その他':    '上記に当てはまらない支出・収入',
+};
+function updateCatHint(){
+  const cat=document.getElementById('entryCategory').value;
+  const hint=document.getElementById('catHint');
+  hint.textContent=CAT_HINTS[cat]||'';
+}
+
+// ─── Wallet Management ───────────────
+function openWalletModal(){
+  renderWalletList();
+  document.getElementById('walletModal').classList.add('open');
+}
+function closeWalletModal(){document.getElementById('walletModal').classList.remove('open');}
+
+function renderWalletList(){
+  const wrap=document.getElementById('walletList');
+  wrap.innerHTML=wallets.map((w,i)=>`
+    <div class="wallet-manage-row">
+      <input type="text" value="${w}" id="wm-input-${i}" onkeydown="if(event.key==='Enter')saveWalletName(${i})">
+      <button class="btn-edit" onclick="saveWalletName(${i})">変更</button>
+      <button class="btn-del" onclick="deleteWallet(${i})">削除</button>
+    </div>`).join('');
+}
+
+function saveWalletName(i){
+  const newName=document.getElementById(`wm-input-${i}`).value.trim();
+  if(!newName){toast('口座名を入力してください');return;}
+  if(wallets.includes(newName)&&wallets[i]!==newName){toast('同じ名前の口座が既にあります');return;}
+  const oldName=wallets[i];
+  wallets[i]=newName;
+  // Update entries that use the old wallet name
+  entries.forEach(e=>{
+    if(e.wallet===oldName)e.wallet=newName;
+    if(e.transferFrom===oldName)e.transferFrom=newName;
+    if(e.transferTo===oldName)e.transferTo=newName;
+  });
+  saveAll();populateWallets();renderWalletList();toast('変更しました');render();
+}
+
+function addWallet(){
+  const name=document.getElementById('newWalletName').value.trim();
+  if(!name){toast('口座名を入力してください');return;}
+  if(wallets.includes(name)){toast('同じ名前の口座が既にあります');return;}
+  wallets.push(name);
+  saveAll();populateWallets();renderWalletList();
+  document.getElementById('newWalletName').value='';
+  toast(`「${name}」を追加しました`);render();
+}
+
+function deleteWallet(i){
+  const name=wallets[i];
+  const inUse=entries.some(e=>e.wallet===name||e.transferFrom===name||e.transferTo===name);
+  if(inUse){
+    confirm2(`「${name}」はデータで使用中です。削除すると関連データの口座名が消えます。続けますか？`,()=>{
+      wallets.splice(i,1);
+      entries.forEach(e=>{
+        if(e.wallet===name)e.wallet='';
+        if(e.transferFrom===name)e.transferFrom='';
+        if(e.transferTo===name)e.transferTo='';
+      });
+      saveAll();populateWallets();renderWalletList();toast('削除しました');render();
+    });
+  }else{
+    wallets.splice(i,1);
+    saveAll();populateWallets();renderWalletList();toast('削除しました');render();
+  }
 }
 
 // ─── Tax calculation ─────────────────
