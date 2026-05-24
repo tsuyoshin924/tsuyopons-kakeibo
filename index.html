@@ -1556,7 +1556,7 @@ function importCSV(event){
 
 // ─── Backup / Restore ────────────────
 function backupData(){
-  const data={entries,budgets,yearlyBudgets,recurring,templates,savingsGoal,wallets,fixedCats,yearlyBudgetItems,darkMode,savingsItems,debtItems,debtPayments,version:3};
+  const data={entries,budgets,yearlyBudgets,recurring,templates,savingsGoal,wallets,fixedCats,yearlyBudgetItems,darkMode,savingsItems,debtItems,debtPayments,startDay,startDayExceptions,extPresets,collapsedCards,version:4};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);a.download=`kakeibo_backup_${formatDate(new Date())}.json`;a.click();toast('バックアップしました');
 }
@@ -1567,8 +1567,18 @@ function restoreData(event){
     if(d.recurring)recurring=d.recurring;if(d.templates)templates=d.templates;if(d.savingsGoal!==undefined)savingsGoal=d.savingsGoal;
     if(d.wallets)wallets=d.wallets;if(d.fixedCats)fixedCats=d.fixedCats;if(d.yearlyBudgetItems)yearlyBudgetItems=d.yearlyBudgetItems;
     if(d.savingsItems)savingsItems=d.savingsItems;if(d.debtItems)debtItems=d.debtItems;if(d.debtPayments)debtPayments=d.debtPayments;
+    if(d.startDay!==undefined)startDay=d.startDay;
+    if(d.startDayExceptions)startDayExceptions=d.startDayExceptions;
+    if(d.extPresets)extPresets=d.extPresets;
+    if(d.collapsedCards)collapsedCards=d.collapsedCards;
     if(d.darkMode!==undefined){darkMode=d.darkMode;document.documentElement.setAttribute('data-theme',darkMode?'dark':'');}
-    saveAllFull();populateWallets();toast('復元しました');render();}catch{toast('ファイルの読み込みに失敗しました');}};
+    saveAllFull();
+    localStorage.setItem('kb_startday',JSON.stringify(startDay));
+    localStorage.setItem('kb_startday_ex',JSON.stringify(startDayExceptions));
+    localStorage.setItem('kb_extpresets',JSON.stringify(extPresets));
+    localStorage.setItem('kb_collapsed',JSON.stringify(collapsedCards));
+    populateWallets();applyCollapsedState();initViewMonth();
+    toast('復元しました');render();}catch{toast('ファイルの読み込みに失敗しました');}};
   reader.readAsText(file);event.target.value='';
 }
 
