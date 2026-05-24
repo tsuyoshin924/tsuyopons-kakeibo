@@ -1269,7 +1269,15 @@ function renderYbiList(){
 // ─── CSV ─────────────────────────────
 function exportCSV(){
   let csv='\uFEFF日付,種類,カテゴリ,口座,店舗,メモ,金額\n';
-  entries.forEach(e=>csv+=`${e.date},${e.type==='income'?'収入':'支出'},${e.category},${e.wallet||''},${e.shop||''},${e.memo||''},${e.amount}\n`);
+  entries.forEach(e=>{
+    if(e.isTransfer){
+      // 振替元（マイナス）と振替先（プラス）を2行で出力
+      csv+=`${e.date},支出,振替,${e.transferFrom||''},,,${e.amount}\n`;
+      csv+=`${e.date},収入,振替,${e.transferTo||''},,,${e.amount}\n`;
+    }else{
+      csv+=`${e.date},${e.type==='income'?'収入':'支出'},${e.category},${e.wallet||''},${e.shop||''},${e.memo||''},${e.amount}\n`;
+    }
+  });
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);a.download=`kakeibo_${formatDate(new Date())}.csv`;a.click();toast('CSVを出力しました');
 }
