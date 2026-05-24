@@ -859,7 +859,7 @@ function render(){
   const ym=viewYear+'-'+String(viewMonth+1).padStart(2,'0');
   document.getElementById('currentMonth').textContent=`${viewYear}年${viewMonth+1}月`;
   const me=entries.filter(e=>e.date.startsWith(ym));
-  const meNormal=me.filter(e=>!e.isTransfer&&e.category!=='振替');
+  const meNormal=me.filter(e=>!e.isTransfer&&e.type!=='transfer'&&e.category!=='振替');
   const inc=meNormal.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
   const exp=meNormal.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
   document.getElementById('totalIncome').textContent=formatYen(inc);
@@ -875,14 +875,13 @@ function renderWallets(me){
   const wrap=document.getElementById('walletSummary');
   const data={};wallets.forEach(w=>data[w]=0);
   me.forEach(e=>{
-    // アプリ内振替：振替元から引き、振替先に足す
-    if(e.isTransfer){
-      if(e.transferFrom&&data[e.transferFrom]!==undefined)data[e.transferFrom]-=e.amount;
-      if(e.transferTo&&data[e.transferTo]!==undefined)data[e.transferTo]+=e.amount;
-    // CSV等カテゴリ「振替」：先が不明なためスキップ
-    } else if(e.category==='振替'){
-      return;
-    } else {
+    const isT=e.isTransfer||e.type==='transfer';
+    if(isT&&e.transferFrom&&e.transferTo){
+      if(data[e.transferFrom]!==undefined)data[e.transferFrom]-=e.amount;
+      if(data[e.transferTo]!==undefined)data[e.transferTo]+=e.amount;
+    }else if(e.category==='振替'){
+      return; // 振替先不明のCSV読込分はスキップ
+    }else{
       const w=e.wallet||wallets[0];if(data[w]===undefined)data[w]=0;
       data[w]+=(e.type==='income'?1:-1)*e.amount;
     }
@@ -1270,10 +1269,14 @@ function renderYbiList(){
 function exportCSV(){
   let csv='\uFEFF日付,種類,カテゴリ,口座,店舗,メモ,金額\n';
   entries.forEach(e=>{
-    if(e.isTransfer){
-      // 振替元（マイナス）と振替先（プラス）を2行で出力
-      csv+=`${e.date},支出,振替,${e.transferFrom||''},,,${e.amount}\n`;
-      csv+=`${e.date},収入,振替,${e.transferTo||''},,,${e.amount}\n`;
+    const isT=e.isTransfer||e.type==='transfer';
+    if(isT&&e.transferFrom&&e.transferTo){
+      // アプリ内振替：振替元・振替先を2行で出力
+      csv+=`${e.date},支出,振替,${e.transferFrom},,,${e.amount}\n`;
+      csv+=`${e.date},収入,振替,${e.transferTo},,,${e.amount}\n`;
+    }else if(e.category==='振替'){
+      // CSV読込の振替（振替先不明）：そのまま1行
+      csv+=`${e.date},支出,振替,${e.wallet||''},,,${e.amount}\n`;
     }else{
       csv+=`${e.date},${e.type==='income'?'収入':'支出'},${e.category},${e.wallet||''},${e.shop||''},${e.memo||''},${e.amount}\n`;
     }
