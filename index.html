@@ -43,7 +43,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;transition:background .3s,color .3s;}
-.container{max-width:900px;margin:0 auto;padding:20px 16px 80px;overflow:hidden;}
+.container{max-width:900px;margin:0 auto;padding:20px 16px 80px;overflow-x:hidden;}
 h1{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.6rem;font-weight:700;text-align:center;padding:24px 0 8px;color:var(--accent);}
 /* Header bar */
 .header-bar{display:flex;align-items:center;padding:16px 0 8px;position:relative;}
@@ -69,7 +69,7 @@ h1{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.6rem;font-weight:700;t
 .summary-card h3{font-size:.72rem;font-weight:500;color:var(--text-sub);margin-bottom:4px;}
 .summary-card .amount{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.2rem;font-weight:700;}
 .summary-card.income .amount{color:var(--green);}.summary-card.expense .amount{color:var(--red);}.summary-card.balance .amount{color:var(--blue);}
-.card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:var(--shadow);overflow:hidden;min-width:0;}
+.card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:var(--shadow);overflow-x:hidden;min-width:0;}
 .card-title{font-family:'M PLUS Rounded 1c',sans-serif;font-size:1rem;font-weight:700;margin-bottom:16px;}
 .card-title.collapsible{cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:0;user-select:none;}
 .card-title.collapsible:hover{color:var(--accent);}
@@ -1077,7 +1077,7 @@ function populateFilterMonths(){
   const cur=viewYear+'-'+String(viewMonth+1).padStart(2,'0');ms.add(cur);
   const sorted=[...ms].sort().reverse();
   sel.innerHTML='<option value="all">すべての月</option>'+sorted.map(m=>`<option value="${m}">${m.replace('-','年')}月</option>`).join('');
-  if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;else sel.value=cur;
+  if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;else sel.value='all';
 }
 function renderHistory(){
   const tbody=document.getElementById('historyBody');
