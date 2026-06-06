@@ -1651,14 +1651,51 @@ function execExport(){
 }
 function importCSV(event){
   const file=event.target.files[0];if(!file)return;const reader=new FileReader();
-  reader.onload=function(e){const lines=e.target.result.split('\n').filter(l=>l.trim());let added=0,dupes=0;
-    for(let i=1;i<lines.length;i++){const c=lines[i].split(',');if(c.length<6)continue;
-      const type=c[1].trim()==='収入'?'income':'expense';
-      const entry={id:Date.now()+i,date:c[0].trim(),type,category:c[2].trim(),wallet:c.length>=7?c[3].trim():'',shop:c.length>=7?c[4].trim():c[3].trim(),memo:c.length>=7?c[5].trim():c[4].trim(),amount:parseInt(c[c.length-1])||0};
+  reader.onload=function(e){
+    const lines=e.target.result.split('\n').filter(l=>l.trim());
+    let added=0,dupes=0,converted=0;
+    const incomeCats=new Set(['給料','副業','投資','その他','振替']);
+    for(let i=1;i<lines.length;i++){
+      const c=lines[i].split(',');if(c.length<6)continue;
+      const rawType=c[1].trim();
+      const type=rawType==='収入'?'income':'expense';
+      const category=c[2].trim();
+      const wallet=c.length>=7?c[3].trim():'';
+      const shop=c.length>=7?c[4].trim():c[3].trim();
+      const memo=c.length>=7?c[5].trim():c[4].trim();
+      const amount=parseInt(c[c.length-1])||0;
+      const date=c[0].trim();
+
+      // PayPayチャージ検出: 収入 + 非収入カテゴリ + 店舗/口座がPayPay
+      const isPayPayCharge=
+        type==='income' &&
+        !incomeCats.has(category) &&
+        (shop.toLowerCase()==='paypay'||shop==='') &&
+        wallet==='PayPay';
+
+      if(isPayPayCharge){
+        // 振替エントリに変換（三井住友銀行→PayPay）
+        const transferEntry={
+          id:Date.now()+i,date,type:'transfer',isTransfer:true,
+          transferFrom:'三井住友銀行',transferTo:'PayPay',
+          amount,memo:memo||'PayPayチャージ',wallet:'三井住友銀行',
+          category:'振替',shop:''
+        };
+        if(!isDuplicate(transferEntry)){entries.push(transferEntry);added++;converted++;}
+        else dupes++;
+        continue;
+      }
+
+      const entry={id:Date.now()+i,date,type,category,wallet,shop,memo,amount};
       if(isDuplicate(entry)){dupes++;continue;}
-      entries.push(entry);added++;}
+      entries.push(entry);added++;
+    }
     entries.sort((a,b)=>b.date.localeCompare(a.date));saveAll();
-    toast(`${added}件読み込みました${dupes>0?' (重複'+dupes+'件スキップ)':''}`);render();};
+    let msg=`${added}件読み込みました`;
+    if(converted>0)msg+=` (チャージ${converted}件→振替に変換)`;
+    if(dupes>0)msg+=` (重複${dupes}件スキップ)`;
+    toast(msg);render();
+  };
   reader.readAsText(file);event.target.value='';
 }
 
