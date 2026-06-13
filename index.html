@@ -477,7 +477,12 @@ tr.waste-row{background:rgba(224,160,32,.06)!important;}
     </div>
     <div class="card-body" id="c-history">
     <div class="filters">
-      <select id="filterMonth" onchange="render()"></select>
+      <input type="date" id="filterFrom" onchange="render()" title="開始日">
+      <span style="font-size:.8rem;color:var(--text-sub);">〜</span>
+      <input type="date" id="filterTo" onchange="render()" title="終了日">
+      <button onclick="setHistoryRange('thisMonth')" class="preset-chip" style="padding:5px 10px;font-size:.72rem;">今月</button>
+      <button onclick="setHistoryRange('lastMonth')" class="preset-chip" style="padding:5px 10px;font-size:.72rem;">先月</button>
+      <button onclick="setHistoryRange('all')" class="preset-chip" style="padding:5px 10px;font-size:.72rem;">全期間</button>
       <select id="filterType" onchange="render()">
         <option value="all">すべての種類</option>
         <option value="income">収入のみ</option>
@@ -1429,21 +1434,46 @@ function renderTrend(){
 }
 
 // ─── History ─────────────────────────
+function setHistoryRange(range){
+  const now=new Date();
+  const y=now.getFullYear(),m=now.getMonth();
+  let from,to;
+  if(range==='thisMonth'){
+    const{from:f,to:t}=getMonthRange(viewYear,viewMonth,startDay);
+    from=f;to=t;
+  }else if(range==='lastMonth'){
+    let pm=viewMonth-1,py=viewYear;if(pm<0){pm=11;py--;}
+    const{from:f,to:t}=getMonthRange(py,pm,startDay);
+    from=f;to=t;
+  }else{
+    const dates=entries.map(e=>e.date).sort();
+    from=dates[0]||formatDate(now);
+    to=dates[dates.length-1]||formatDate(now);
+  }
+  document.getElementById('filterFrom').value=from;
+  document.getElementById('filterTo').value=to;
+  render();
+}
+
 function populateFilterMonths(){
-  const sel=document.getElementById('filterMonth');const prev=sel.value;
-  const ms=new Set();entries.forEach(e=>ms.add(e.date.substring(0,7)));
-  const cur=viewYear+'-'+String(viewMonth+1).padStart(2,'0');ms.add(cur);
-  const sorted=[...ms].sort().reverse();
-  sel.innerHTML='<option value="all">すべての月</option>'+sorted.map(m=>`<option value="${m}">${m.replace('-','年')}月</option>`).join('');
-  if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;else sel.value='all';
+  // 今月をデフォルト設定（初回のみ）
+  const fromEl=document.getElementById('filterFrom');
+  const toEl=document.getElementById('filterTo');
+  if(!fromEl.value&&!toEl.value){
+    const{from,to}=getMonthRange(viewYear,viewMonth,startDay);
+    fromEl.value=from;
+    toEl.value=to;
+  }
 }
 function renderHistory(){
   const tbody=document.getElementById('historyBody');
-  const fm=document.getElementById('filterMonth').value;
+  const from=document.getElementById('filterFrom').value;
+  const to=document.getElementById('filterTo').value;
   const ft=document.getElementById('filterType').value;
   const fs=document.getElementById('filterSearch').value.trim().toLowerCase();
   let f=entries;
-  if(fm!=='all')f=f.filter(e=>e.date.startsWith(fm));
+  if(from)f=f.filter(e=>e.date>=from);
+  if(to)f=f.filter(e=>e.date<=to);
   if(ft==='income')f=f.filter(e=>e.type==='income'&&!e.isTransfer);
   else if(ft==='expense')f=f.filter(e=>e.type==='expense'&&!e.isTransfer);
   else if(ft==='transfer')f=f.filter(e=>e.isTransfer);
