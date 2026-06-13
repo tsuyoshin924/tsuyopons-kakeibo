@@ -325,7 +325,7 @@ tr.waste-row{background:rgba(224,160,32,.06)!important;}
 
   <!-- Hidden file inputs -->
   <input type="file" id="csvInput" class="file-input" accept=".csv" onchange="importCSV(event)">
-  <input type="file" id="extCsvInput" class="file-input" accept=".csv" onchange="loadExtCsv(event)">
+  <input type="file" id="extCsvInput" class="file-input" accept=".csv" onchange="loadExtCsvWithEncoding(event)">
   <input type="file" id="restoreInput" class="file-input" accept=".json" onchange="restoreData(event)">
 
   <!-- Drawer overlay -->
@@ -347,7 +347,7 @@ tr.waste-row{background:rgba(224,160,32,.06)!important;}
       <div class="drawer-divider"></div>
       <button class="drawer-item" onclick="dc(openExportModal)"><span class="di-icon">📤</span>CSV出力</button>
       <button class="drawer-item" onclick="dc(()=>document.getElementById('csvInput').click())"><span class="di-icon">📥</span>CSV読込（本アプリ形式）</button>
-      <button class="drawer-item" onclick="dc(()=>document.getElementById('extCsvInput').click())"><span class="di-icon">🔄</span>外部CSV読込</button>
+      <button class="drawer-item" onclick="dc(openEncPreModal)"><span class="di-icon">🔄</span>外部CSV読込</button>
       <button class="drawer-item" onclick="dc(backupData)"><span class="di-icon">💾</span>バックアップ</button>
       <button class="drawer-item" onclick="dc(()=>document.getElementById('restoreInput').click())"><span class="di-icon">📂</span>復元</button>
       <div class="drawer-divider"></div>
@@ -790,10 +790,37 @@ tr.waste-row{background:rgba(224,160,32,.06)!important;}
   <div class="modal-actions"><button class="btn-cancel" onclick="closeYbiModal()">閉じる</button></div>
 </div></div>
 
+<!-- Encoding Pre-select Modal -->
+<div class="modal-overlay" id="encPreModal"><div class="modal" style="max-width:380px;">
+  <h2>🔄 外部CSV読込</h2>
+  <p style="font-size:.82rem;color:var(--text-sub);margin-bottom:16px;">ファイルを選択する前に文字コードを指定してください</p>
+  <div class="map-row"><label>文字コード</label>
+    <select id="enc-pre-select">
+      <option value="utf-8">UTF-8（PayPay等）</option>
+      <option value="shift_jis">Shift-JIS（三井住友銀行等）</option>
+    </select>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;margin-bottom:4px;">
+    <button class="preset-chip" onclick="document.getElementById('enc-pre-select').value='utf-8'">PayPay</button>
+    <button class="preset-chip" onclick="document.getElementById('enc-pre-select').value='shift_jis'">三井住友銀行</button>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="document.getElementById('encPreModal').classList.remove('open')">キャンセル</button>
+    <button class="btn-save" onclick="openExtCsvFile()">ファイルを選択 →</button>
+  </div>
+</div></div>
+
 <!-- External CSV Mapping Modal -->
 <div class="modal-overlay" id="extCsvModal"><div class="modal" style="max-width:600px;">
   <h2>🔄 外部CSV読込</h2>
 
+  <div class="map-section-title">🔤 文字コード</div>
+  <div class="map-row"><label>エンコード</label>
+    <select id="mp-encoding">
+      <option value="utf-8">UTF-8（標準）</option>
+      <option value="shift-jis">Shift-JIS（三井住友銀行等）</option>
+    </select>
+  </div>
   <div class="map-section-title">📋 プリセット</div>
   <div class="preset-chips" id="presetChips"></div>
 
@@ -813,14 +840,14 @@ tr.waste-row{background:rgba(224,160,32,.06)!important;}
   </div>
   <div class="map-row"><label>金額の形式</label>
     <select id="mp-amtmode" onchange="updateAmtMode()">
-      <option value="single">1列（プラス＝収入 / マイナス＝支出）</option>
-      <option value="split">出金列・入金列が別々</option>
+      <option value="split">【銀行明細】出金列・入金列が別々</option>
+      <option value="single">【単一列】プラス＝収入 / マイナス＝支出</option>
     </select>
   </div>
-  <div id="mp-amt-single"><div class="map-row"><label>金額列</label><select id="mp-amt"></select></div></div>
-  <div id="mp-amt-split" style="display:none;">
-    <div class="map-row"><label>出金列</label><select id="mp-out"></select></div>
-    <div class="map-row"><label>入金列</label><select id="mp-in"></select></div>
+  <div id="mp-amt-single" style="display:none;"><div class="map-row"><label>金額列</label><select id="mp-amt"></select></div></div>
+  <div id="mp-amt-split">
+    <div class="map-row"><label>出金列<br><span style="font-size:.65rem;color:var(--text-sub);">→支出</span></label><select id="mp-out"></select></div>
+    <div class="map-row"><label>入金列<br><span style="font-size:.65rem;color:var(--text-sub);">→収入</span></label><select id="mp-in"></select></div>
   </div>
   <div class="map-row"><label>店舗列</label><select id="mp-shop"></select></div>
   <div class="map-row"><label>メモ列</label><select id="mp-memo"></select></div>
@@ -1178,10 +1205,12 @@ function renderWallets(me){
   me.forEach(e=>{
     const isT=e.isTransfer||e.type==='transfer';
     if(isT&&e.transferFrom&&e.transferTo){
-      if(data[e.transferFrom]!==undefined)data[e.transferFrom]-=e.amount;
-      if(data[e.transferTo]!==undefined)data[e.transferTo]+=e.amount;
+      if(data[e.transferFrom]===undefined)data[e.transferFrom]=0;
+      if(data[e.transferTo]===undefined)data[e.transferTo]=0;
+      data[e.transferFrom]-=e.amount;
+      data[e.transferTo]+=e.amount;
     }else if(e.category==='振替'){
-      return; // 振替先不明のCSV読込分はスキップ
+      return;
     }else{
       const w=e.wallet||wallets[0];if(data[w]===undefined)data[w]=0;
       data[w]+=(e.type==='income'?1:-1)*e.amount;
@@ -1797,19 +1826,50 @@ function isDuplicate(e){
 // ─── External CSV Import ─────────────
 const BUILTIN_PRESETS=[
   {name:'PayPay', builtin:true,
+   encoding:'utf-8',
    datefmt:'YYYY/MM/DD HH:mm:ss', amtmode:'split',
    date:'取引日', out:'出金金額（円）', inp:'入金金額（円）',
    shop:'取引先', memo:'取引内容', type:'', wallet:'PayPay', category:'食費',
    exclude:'チャージ'},
   {name:'三井住友銀行', builtin:true,
+   encoding:'shift-jis',
    datefmt:'YYYY/MM/DD', amtmode:'split',
-   date:'年月日', out:'お引き出し', inp:'お預け入れ',
-   shop:'摘要', memo:'', type:'', wallet:'銀行', category:'その他',
-   exclude:''},
+   date:'年月日', out:'お引出し', inp:'お預入れ',
+   shop:'お取り扱い内容', memo:'', type:'', wallet:'三井住友銀行', category:'その他',
+   exclude:'PAYPAY,カード,パソコン振替'},
 ];
 let extPresets=load('kb_extpresets',[]);
 let extCsvHeaders=[];
 let extCsvRows=[];
+
+function openEncPreModal(){
+  document.getElementById('encPreModal').classList.add('open');
+}
+function openExtCsvFile(){
+  document.getElementById('encPreModal').classList.remove('open');
+  document.getElementById('extCsvInput').click();
+}
+
+function loadExtCsvWithEncoding(event){
+  const file=event.target.files[0];if(!file)return;
+  // 事前モーダルで選択したエンコーディングを使用
+  const enc=document.getElementById('enc-pre-select')?.value||'utf-8';
+  const reader=new FileReader();
+  reader.onload=function(e){
+    _extFullText=e.target.result;
+    const lines=_extFullText.split('\n').filter(l=>l.trim());
+    if(lines.length<2){toast('データがありません');return;}
+    const clean=lines[0].replace(/^\uFEFF/,'');
+    extCsvHeaders=clean.split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+    extCsvRows=lines.slice(1,4).map(l=>parseCsvLine(l));
+    // 事前選択のエンコーディングをモーダルに反映
+    const mpEnc=document.getElementById('mp-encoding');
+    if(mpEnc)mpEnc.value=enc==='shift_jis'?'shift-jis':'utf-8';
+    openExtCsvModal();
+  };
+  reader.readAsText(file,enc);
+  event.target.value='';
+}
 
 function openExtCsvModal(){
   // Build column options
@@ -1841,6 +1901,7 @@ function applyPreset(i){
   const all=[...BUILTIN_PRESETS,...extPresets];
   const p=all[i];if(!p)return;
   const set=(id,v)=>{const el=document.getElementById(id);if(el&&v!==undefined){el.value=v;}};
+  set('mp-encoding',p.encoding||'utf-8');
   set('mp-datefmt',p.datefmt);set('mp-amtmode',p.amtmode);updateAmtMode();
   set('mp-date',p.date);set('mp-out',p.out);set('mp-in',p.inp);
   set('mp-amt',p.amt||'');set('mp-shop',p.shop);set('mp-memo',p.memo);
@@ -1919,8 +1980,17 @@ function loadExtCsv(event){
     extCsvRows=lines.slice(1,4).map(l=>parseCsvLine(l));
     openExtCsvModal();
   };
-  reader.readAsText(file);
+  // エンコーディングを選択可能に（ファイル選択時はUTF-8で試行、モーダル内で変更可）
+  reader.readAsText(file,'utf-8');
   event.target.value='';
+}
+
+function reloadWithEncoding(){
+  const enc=document.getElementById('mp-encoding').value;
+  const fileInput=document.getElementById('extCsvInput');
+  if(!_extFullText&&!fileInput.files[0])return;
+  // エンコーディングが変わった場合は再読み込み（ファイルがあれば）
+  toast('エンコーディングを変更するにはファイルを再選択してください');
 }
 
 function parseCsvLine(line){
@@ -2505,4 +2575,3 @@ init();
 </script>
 </body>
 </html>
-
