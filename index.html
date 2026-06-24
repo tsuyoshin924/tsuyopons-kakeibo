@@ -483,6 +483,9 @@ tr.waste-row{background:rgba(224,160,32,.06)!important;}
       <button onclick="setHistoryRange('thisMonth')" class="preset-chip" style="padding:5px 10px;font-size:.72rem;">今月</button>
       <button onclick="setHistoryRange('lastMonth')" class="preset-chip" style="padding:5px 10px;font-size:.72rem;">先月</button>
       <button onclick="setHistoryRange('all')" class="preset-chip" style="padding:5px 10px;font-size:.72rem;">全期間</button>
+      <select id="filterWallet" onchange="render()">
+        <option value="all">すべての口座</option>
+      </select>
       <select id="filterType" onchange="render()">
         <option value="all">すべての種類</option>
         <option value="income">収入のみ</option>
@@ -1456,20 +1459,25 @@ function setHistoryRange(range){
 }
 
 function populateFilterMonths(){
-  // 今月をデフォルト設定（初回のみ）
   const fromEl=document.getElementById('filterFrom');
   const toEl=document.getElementById('filterTo');
   if(!fromEl.value&&!toEl.value){
     const{from,to}=getMonthRange(viewYear,viewMonth,startDay);
-    fromEl.value=from;
-    toEl.value=to;
+    fromEl.value=from;toEl.value=to;
   }
+  // 口座フィルターの選択肢を更新
+  const sel=document.getElementById('filterWallet');
+  const prev=sel.value;
+  sel.innerHTML='<option value="all">すべての口座</option>'+
+    wallets.map(w=>`<option value="${w}">${w}</option>`).join('');
+  if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;
 }
 function renderHistory(){
   const tbody=document.getElementById('historyBody');
   const from=document.getElementById('filterFrom').value;
   const to=document.getElementById('filterTo').value;
   const ft=document.getElementById('filterType').value;
+  const fw=document.getElementById('filterWallet').value;
   const fs=document.getElementById('filterSearch').value.trim().toLowerCase();
   let f=entries;
   if(from)f=f.filter(e=>e.date>=from);
@@ -1477,6 +1485,7 @@ function renderHistory(){
   if(ft==='income')f=f.filter(e=>e.type==='income'&&!e.isTransfer);
   else if(ft==='expense')f=f.filter(e=>e.type==='expense'&&!e.isTransfer);
   else if(ft==='transfer')f=f.filter(e=>e.isTransfer);
+  if(fw!=='all')f=f.filter(e=>e.wallet===fw||e.transferFrom===fw||e.transferTo===fw);
   if(fs)f=f.filter(e=>(e.shop||'').toLowerCase().includes(fs)||(e.memo||'').toLowerCase().includes(fs)||(e.category||'').toLowerCase().includes(fs)||(e.transferFrom||'').toLowerCase().includes(fs)||(e.transferTo||'').toLowerCase().includes(fs));
   if(f.length===0){tbody.innerHTML='<tr><td colspan="8" class="empty-msg">記録がありません。</td></tr>';return;}
   tbody.innerHTML=f.map(e=>{
