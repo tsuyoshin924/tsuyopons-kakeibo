@@ -739,12 +739,27 @@ tr.waste-row{background:rgba(224,160,32,.06)!important;}
   <h2>✏️ 記録を編集</h2>
   <input type="hidden" id="editId">
   <div class="form-row" style="flex-direction:column;gap:12px;">
-    <div class="form-group"><label>種類</label><select id="editType" onchange="updateEditCategories()"><option value="expense">支出</option><option value="income">収入</option></select></div>
+    <div class="form-group"><label>種類</label>
+      <select id="editType" onchange="updateEditCategories();updateEditTransferFields()">
+        <option value="expense">支出</option>
+        <option value="income">収入</option>
+        <option value="transfer">💸 振替</option>
+      </select>
+    </div>
     <div class="form-group"><label>日付</label><input type="date" id="editDate"></div>
-    <div class="form-group"><label>カテゴリ</label><select id="editCategory"></select></div>
-    <div class="form-group"><label>金額</label><input type="number" id="editAmount" min="0"></div>
-    <div class="form-group"><label>口座</label><select id="editWallet"></select></div>
-    <div class="form-group"><label>店舗</label><input type="text" id="editShop"></div>
+    <!-- 通常フィールド -->
+    <div id="editNormalFields">
+      <div class="form-group" style="margin-bottom:12px;"><label>カテゴリ</label><select id="editCategory"></select></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>金額</label><input type="number" id="editAmount" min="0"></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>口座</label><select id="editWallet"></select></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>店舗</label><input type="text" id="editShop"></div>
+    </div>
+    <!-- 振替フィールド -->
+    <div id="editTransferFields" style="display:none;">
+      <div class="form-group" style="margin-bottom:12px;"><label>振替元</label><select id="editTransferFrom"></select></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>振替先</label><select id="editTransferTo"></select></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>金額</label><input type="number" id="editTransferAmount" min="0"></div>
+    </div>
     <div class="form-group"><label>メモ</label><input type="text" id="editMemo"></div>
   </div>
   <div class="modal-actions">
@@ -1123,17 +1138,34 @@ function executeDelete(){if(pendingDeleteId!==null){deleteEntry(pendingDeleteId)
 function openEditModal(id){
   const e=entries.find(x=>x.id===id);if(!e)return;
   document.getElementById('editId').value=id;
-  document.getElementById('editType').value=e.type;
+  const isT=e.isTransfer||e.type==='transfer';
+  document.getElementById('editType').value=isT?'transfer':e.type;
   document.getElementById('editDate').value=e.date;
-  updateEditCategories(e.category);
-  document.getElementById('editAmount').value=e.amount;
-  populateWallets();
-  document.getElementById('editWallet').value=e.wallet||wallets[0];
-  document.getElementById('editShop').value=e.shop||'';
   document.getElementById('editMemo').value=e.memo||'';
+  populateWallets();
+  // 振替元・先の選択肢を生成
+  const walletOpts=wallets.map(w=>`<option value="${w}">${w}</option>`).join('');
+  document.getElementById('editTransferFrom').innerHTML=walletOpts;
+  document.getElementById('editTransferTo').innerHTML=walletOpts;
+  if(isT){
+    document.getElementById('editTransferFrom').value=e.transferFrom||wallets[0];
+    document.getElementById('editTransferTo').value=e.transferTo||wallets[1]||wallets[0];
+    document.getElementById('editTransferAmount').value=e.amount;
+  }else{
+    updateEditCategories(e.category);
+    document.getElementById('editAmount').value=e.amount;
+    document.getElementById('editWallet').value=e.wallet||wallets[0];
+    document.getElementById('editShop').value=e.shop||'';
+  }
+  updateEditTransferFields();
   document.getElementById('editModal').classList.add('open');
 }
 function closeEditModal(){document.getElementById('editModal').classList.remove('open');}
+function updateEditTransferFields(){
+  const isT=document.getElementById('editType').value==='transfer';
+  document.getElementById('editNormalFields').style.display=isT?'none':'';
+  document.getElementById('editTransferFields').style.display=isT?'':'none';
+}
 function updateEditCategories(sel){
   const type=document.getElementById('editType').value;
   const cats=type==='expense'?EXPENSE_CATS:INCOME_CATS;
@@ -1141,14 +1173,30 @@ function updateEditCategories(sel){
   s.innerHTML=cats.map(c=>`<option value="${c}"${c===sel?' selected':''}>${c}</option>`).join('');
 }
 function saveEdit(){
-  const id=parseInt(document.getElementById('editId').value);const e=entries.find(x=>x.id===id);if(!e)return;
-  const amount=parseInt(document.getElementById('editAmount').value);
-  if(!amount||amount<=0){toast('金額を正しく入力してください');return;}
-  e.type=document.getElementById('editType').value;e.date=document.getElementById('editDate').value;
-  e.category=document.getElementById('editCategory').value;e.amount=amount;
-  e.wallet=document.getElementById('editWallet').value;
-  e.shop=document.getElementById('editShop').value.trim();e.memo=document.getElementById('editMemo').value.trim();
-  entries.sort((a,b)=>b.date.localeCompare(a.date));saveAll();closeEditModal();toast('更新しました');render();
+  const id=parseInt(document.getElementById('editId').value);
+  const e=entries.find(x=>x.id===id);if(!e)return;
+  const type=document.getElementById('editType').value;
+  const date=document.getElementById('editDate').value;
+  const memo=document.getElementById('editMemo').value.trim();
+  if(type==='transfer'){
+    const from=document.getElementById('editTransferFrom').value;
+    const to=document.getElementById('editTransferTo').value;
+    const amount=parseInt(document.getElementById('editTransferAmount').value);
+    if(!amount||amount<=0){toast('金額を入力してください');return;}
+    if(from===to){toast('振替元と振替先が同じです');return;}
+    e.type='transfer';e.isTransfer=true;e.transferFrom=from;e.transferTo=to;
+    e.amount=amount;e.date=date;e.memo=memo;
+    e.category='振替';e.wallet=from;e.shop='';
+  }else{
+    const amount=parseInt(document.getElementById('editAmount').value);
+    if(!amount||amount<=0){toast('金額を正しく入力してください');return;}
+    e.type=type;e.isTransfer=false;delete e.transferFrom;delete e.transferTo;
+    e.date=date;e.category=document.getElementById('editCategory').value;
+    e.amount=amount;e.wallet=document.getElementById('editWallet').value;
+    e.shop=document.getElementById('editShop').value.trim();e.memo=memo;
+  }
+  entries.sort((a,b)=>b.date.localeCompare(a.date));
+  saveAll();closeEditModal();toast('更新しました');render();
 }
 
 // ─── Render ──────────────────────────
@@ -1495,7 +1543,7 @@ function renderHistory(){
         <td colspan="3">${e.transferFrom} → ${e.transferTo}</td>
         <td>${e.memo||'-'}</td>
         <td class="amount-cell" style="color:var(--blue);font-weight:600">${formatYen(e.amount)}</td>
-        <td><button class="btn-del" onclick="confirmDelete(${e.id})">削除</button></td>
+        <td><div class="action-btns"><button class="btn-edit" onclick="openEditModal(${e.id})">編集</button><button class="btn-del" onclick="confirmDelete(${e.id})">削除</button></div></td>
       </tr>`;
     }
     return `<tr${e.wasteful?' class="waste-row"':''}>
